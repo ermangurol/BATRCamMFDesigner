@@ -1017,6 +1017,12 @@
   let touchPinchCenter = null;
 
   graph.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      const rect = graph.getBoundingClientRect();
+      const px = (e.touches[0].clientX - rect.left) * graph.width / rect.width;
+      const py = (e.touches[0].clientY - rect.top) * graph.height / rect.height;
+      if (pointAt(px, py) >= 0) { e.preventDefault(); }
+    }
     if (e.touches.length === 2) {
       e.preventDefault();
       const dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -1042,6 +1048,7 @@
   }, { passive: false });
 
   graph.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 1 && drag && drag.index >= 0) { e.preventDefault(); return; }
     if (e.touches.length === 2 && touchPinchInitialDist) {
       e.preventDefault();
       const dx = e.touches[0].clientX - e.touches[1].clientX;
