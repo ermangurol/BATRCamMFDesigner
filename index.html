@@ -18,7 +18,8 @@
     button:hover { filter:brightness(.91); } button.active { outline:3px solid #8ad49a; outline-offset:1px; } button.remove { background:#c42b1c; margin:0; width:100%; padding:9px 8px; } button:disabled { opacity:.45; cursor:not-allowed; }
     button.icon { width:35px; height:35px; padding:0; border-radius:4px; font-size:21px; line-height:1; } button.icon svg { width:18px; height:18px; vertical-align:middle; fill:currentColor; } button.icon.delete { background:#c42b1c; } button.icon.stop { background:#758292; } #enableInsert { background:var(--green); }
     button.csv-action { height:35px; padding:0 12px; font-size:12px; background:#dce5f1; color:#30475b; box-shadow:none; }
-    .zoom-max-btn { padding:5px 10px; font-size:11px; font-weight:700; background:#fff; border:1px solid #aebbc6; border-radius:4px; color:#30475b; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.08); transition:background 0.2s; }
+    .zoom-max-btn { width:35px; height:35px; padding:0; display:flex; align-items:center; justify-content:center; background:#fff; border:1px solid rgba(0,0,0,0.1); border-radius:4px; color:#30475b; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.15); transition:background 0.2s; }
+    .zoom-max-btn svg { width:18px; height:18px; }
     .zoom-max-btn:hover { background:#eaf0f6; }
     .graph-tools { position:absolute; top:12px; left:12px; display:flex; gap:6px; z-index:10; }
     .graph-tools-right { position:absolute; top:12px; right:12px; z-index:10; display:flex; gap:8px; align-items:center; }
@@ -89,7 +90,7 @@
         <label class="velocity-toggle" data-i18n-title="toggleAccel" title="Toggle Acceleration Graph"><input type="checkbox" id="accelerationToggleCheckbox" onchange="toggleAcceleration()"> <span data-i18n="accelGraphBtn">📈 Acceleration Graph</span></label>
       </div>
       <div class="graph-tools-right">
-        <button class="zoom-max-btn" type="button" data-i18n-title="zoomMaxTitle" title="Zoom Max (Reset View)" onclick="resetZoom()"><span data-i18n="zoomMax">🔍 Zoom Max</span></button>
+        <button class="zoom-max-btn" type="button" data-i18n-title="zoomMaxTitle" title="Zoom Max (Reset View)" onclick="resetZoom()"><svg viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="8" x2="14" y2="14"></line><line x1="14" y1="8" x2="8" y2="14"></line></svg></button>
       </div>
       <canvas id="graph" width="1500" height="520" style="margin-top:0;"></canvas>
     </div>
