@@ -570,12 +570,19 @@
     const position = graphPointerPosition(event);
     const insidePlot = position.px >= graphScale.pad && position.px <= graphScale.pad + graphScale.width && position.py >= graphScale.pad && position.py <= graphScale.pad + graphScale.height;
     if (!insidePlot) { if (mode) setMode(null); return; }
-    if (mode === 'add') { insertPointFromGraph(event); return; }
+    
     const index = pointAt(position.px, position.py);
-    if (mode === 'delete') {
-      if (index >= 0) { points.splice(index, 1); renderPoints(); calculate(); }
+
+    if (index >= 0) {
+      drag = { index, scale: graphScale, startX: event.clientX, startY: event.clientY, moved: false };
+      event.currentTarget.setPointerCapture(event.pointerId);
+      event.currentTarget.style.cursor = 'grabbing';
       return;
     }
+
+    if (mode === 'add') { insertPointFromGraph(event); return; }
+    if (mode === 'delete') return;
+
     if (index < 0) {
         if (event.pointerType === "touch") return;
         if (!zoomState) zoomState = { xMin: graphScale.xMin, xMax: graphScale.xMax, yMin: graphScale.yMin, yMax: graphScale.yMax };
@@ -584,16 +591,13 @@
       event.currentTarget.style.cursor = 'grabbing';
       return;
     }
-    drag = { index, scale: graphScale };
-    event.currentTarget.setPointerCapture(event.pointerId);
-    event.currentTarget.style.cursor = 'grabbing';
   }
   function onGraphPointerMove(event) {
     if (!drag) {
       const position = graphPointerPosition(event), index = pointAt(position.px, position.py), overPoint = index >= 0;
       if (hoverPointIndex !== index) { hoverPointIndex = index; drawGraph(); }
       if (mode === 'add') { event.currentTarget.style.cursor = 'crosshair'; return; }
-      event.currentTarget.style.cursor = mode === 'delete' ? (overPoint ? deleteCursor : 'default') : 'grab';
+      event.currentTarget.style.cursor = mode === 'delete' ? (overPoint ? deleteCursor : 'default') : (overPoint ? 'grab' : 'default');
       return;
     }
     if (drag.pan) {
@@ -601,7 +605,6 @@
       const dy = event.clientY - drag.startY;
       const curWidth = drag.startZoom.xMax - drag.startZoom.xMin;
       const curHeight = drag.startZoom.yMax - drag.startZoom.yMin;
-      // We are dragging pixels, so if dx is positive (mouse moves right), we are viewing further left, so xMin decreases.
       const shiftX = dx * curWidth / graphScale.width;
       const shiftY = dy * curHeight / graphScale.height;
       zoomState.xMin = drag.startZoom.xMin - shiftX;
@@ -611,19 +614,37 @@
       drawGraph();
       return;
     }
+    
+    if (!drag.moved && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 3) {
+        drag.moved = true;
+    }
+
     const position = graphPointerPosition(event, drag.scale), index = drag.index;
     const minX = index === 0 ? masterMin : Math.max(masterMin, points[index - 1].x + .0001);
     const maxX = index === points.length - 1 ? masterMax : Math.min(masterMax, points[index + 1].x - .0001);
-    points[index].x = Math.min(maxX, Math.max(minX, position.x));
-    points[index].y = position.y;
-    hoverPointIndex = index;
-    calculate();
+    const minY = masterMin, maxY = 999999;
+    points[index].x = Math.max(minX, Math.min(maxX, position.x));
+    points[index].y = Math.max(minY, Math.min(maxY, position.y));
+    drawGraph();
   }
   function onGraphPointerUp(event) {
     if (!drag) return;
     const wasPan = drag.pan;
+    const wasMoved = drag.moved;
+    const index = drag.index;
+    
     drag = null;
+    event.currentTarget.releasePointerCapture(event.pointerId);
     event.currentTarget.style.cursor = mode === 'add' ? 'crosshair' : mode === 'delete' ? deleteCursor : 'grab';
+    
+    if (!wasPan && !wasMoved && mode === 'delete' && index >= 0) {
+        points.splice(index, 1);
+        hoverPointIndex = null;
+        renderPoints();
+        calculate();
+        return;
+    }
+    
     if (!wasPan) { renderPoints(); calculate(); }
   }
   function onGraphPointerLeave() { if (!drag && hoverPointIndex !== null) { hoverPointIndex = null; drawGraph(); } }
