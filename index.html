@@ -35,7 +35,7 @@
     .point-header { position:sticky; top:0; z-index:1; background:#eaf0f6; color:#33495c; font-size:13px; font-weight:700; border-bottom:1px solid var(--line); }
     .field { margin:0; } label { display:block; font-size:12px; font-weight:bold; margin-bottom:5px; } .function-label { color:#0078d4; }
     input, select { width:100%; padding:4px 6px; border:1px solid #aebbc6; border-radius:3px; font-size:13px; font-family:Arial, sans-serif; font-weight:400; background:#fff; color:#1d2c38; }
-    canvas { display:block; width:100%; height:520px; margin-top:14px; border:1px solid var(--line); border-radius:4px; background:#fff; touch-action:none; }
+    canvas { display:block; width:100%; height:520px; margin-top:14px; border:1px solid var(--line); border-radius:4px; background:#fff; }
     .result { margin-top:14px; padding:16px; background:#f7f9fc; border:1px solid var(--line); border-radius:5px; } .result input { width:150px; } .value { font-weight:700; margin-left:10px; }
     .segment { margin-top:14px; padding:10px; border-radius:3px; background:#e5ebf1; font-size:13px; }
   
@@ -99,10 +99,10 @@
       <canvas id="graph" width="1500" height="520" style="margin-top:0;"></canvas>
     </div>
     <div id="velocityWrapper" style="display:none; position:relative; margin-top:14px;">
-      <canvas id="velocityGraph" width="1500" height="520" style="display:block; width:100%; border:1px solid var(--line); border-radius:4px; background:#fff; margin-top:0; touch-action:none;"></canvas>
+      <canvas id="velocityGraph" width="1500" height="520" style="display:block; width:100%; border:1px solid var(--line); border-radius:4px; background:#fff; margin-top:0; "></canvas>
     </div>
     <div id="accelerationWrapper" style="display:none; position:relative; margin-top:14px;">
-      <canvas id="accelerationGraph" width="1500" height="520" style="display:block; width:100%; border:1px solid var(--line); border-radius:4px; background:#fff; margin-top:0; touch-action:none;"></canvas>
+      <canvas id="accelerationGraph" width="1500" height="520" style="display:block; width:100%; border:1px solid var(--line); border-radius:4px; background:#fff; margin-top:0; "></canvas>
     </div>
     <div class="result">
       <b data-i18n="masterPosLabel">Master Position:</b> <input id="masterInput" type="number" value="25" oninput="updatePosition()">
@@ -577,7 +577,8 @@
       return;
     }
     if (index < 0) {
-      if (!zoomState) zoomState = { xMin: graphScale.xMin, xMax: graphScale.xMax, yMin: graphScale.yMin, yMax: graphScale.yMax };
+        if (event.pointerType === "touch") return;
+        if (!zoomState) zoomState = { xMin: graphScale.xMin, xMax: graphScale.xMax, yMin: graphScale.yMin, yMax: graphScale.yMax };
       drag = { pan: true, startX: event.clientX, startY: event.clientY, startZoom: { ...zoomState } };
       event.currentTarget.setPointerCapture(event.pointerId);
       event.currentTarget.style.cursor = 'grabbing';
