@@ -740,7 +740,15 @@
     }
   }
 
+  let calcTimeout;
   function calculate() {
+    clearTimeout(calcTimeout);
+    calcTimeout = setTimeout(() => {
+      performCalculate();
+    }, 15);
+  }
+
+  function performCalculate() {
     if (!validPoints()) { setError(getI18n('errMasterGreater')); return; }
     setError();
     if (healSplines()) {
