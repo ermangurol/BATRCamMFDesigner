@@ -56,7 +56,7 @@
       <h2>Beckhoff Motion Function Designer</h2>
       <div class="lang-switch">
         <span onclick="setLanguage('tr')" id="lang-tr"><img src="https://flagcdn.com/w20/tr.png" width="20" alt="TR"> TR</span>
-        <span onclick="setLanguage('en')" id="lang-en" class="active"><img src="https://flagcdn.com/w20/gb.png" width="20" alt="ENG"> ENG ✓</span>
+        <span onclick="setLanguage('en')" id="lang-en" class="active"><img src="https://flagcdn.com/w20/gb.png" width="20" alt="ENG"> ENG</span>
       </div>
     </div>
 
@@ -177,9 +177,9 @@
   function setLanguage(lang) {
     currentLang = lang;
     document.getElementById('lang-tr').className = lang === 'tr' ? 'active' : '';
-    document.getElementById('lang-tr').innerHTML = lang === 'tr' ? '<img src="https://flagcdn.com/w20/tr.png" width="20" alt="TR"> TR ✓' : '<img src="https://flagcdn.com/w20/tr.png" width="20" alt="TR"> TR';
+    document.getElementById('lang-tr').innerHTML = '<img src="https://flagcdn.com/w20/tr.png" width="20" alt="TR"> TR';
     document.getElementById('lang-en').className = lang === 'en' ? 'active' : '';
-    document.getElementById('lang-en').innerHTML = lang === 'en' ? '<img src="https://flagcdn.com/w20/gb.png" width="20" alt="ENG"> ENG ✓' : '<img src="https://flagcdn.com/w20/gb.png" width="20" alt="ENG"> ENG';
+    document.getElementById('lang-en').innerHTML = '<img src="https://flagcdn.com/w20/gb.png" width="20" alt="ENG"> ENG';
 
     document.querySelectorAll('[data-i18n]').forEach(el => {
       el.innerHTML = i18n[lang][el.getAttribute('data-i18n')] || el.innerHTML;
