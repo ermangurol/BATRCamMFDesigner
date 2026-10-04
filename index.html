@@ -85,7 +85,7 @@
     <div style="position:relative; margin-top:14px;">
       <div class="graph-tools">
         <button id="enableInsert" class="icon" type="button" data-i18n-title="toggleAddMode" title="Toggle add point mode" data-i18n-aria="toggleAddMode" aria-label="Toggle add point mode" onclick="setMode('add')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg></button>
-        <button id="enableDelete" class="icon delete" type="button" data-i18n-title="toggleDeleteMode" title="Toggle delete point mode" data-i18n-aria="toggleDeleteMode" aria-label="Toggle delete point mode" onclick="setMode('delete')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
+        <button id="enableDelete" class="icon delete" type="button" data-i18n-title="toggleDeleteMode" title="Toggle delete point mode" data-i18n-aria="toggleDeleteMode" aria-label="Toggle delete point mode" onclick="setMode('delete')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z"/></svg></button>
         <button id="disableMode" class="icon stop" type="button" data-i18n-title="dragMode" title="Drag and Pan Mode" data-i18n-aria="dragMode" aria-label="Drag and Pan Mode" onclick="setMode(null)">
           <svg viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
         </button>
@@ -250,7 +250,7 @@
         ${index === 0
           ? `<div class="field"><input value="${getI18n('startFixed')}" disabled></div>`
           : `<div class="field"><select aria-label="P${index} to P${index + 1} function" onchange="changePoint(${index}, 'function', this.value)">${functionOptions(point.function)}</select></div>`}
-        <button class="remove icon" type="button" title="P${index + 1} Remove point P" aria-label="P${index + 1} Remove point P" onclick="removePoint(${index})"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
+        <button class="remove icon" type="button" title="P${index + 1} Remove point P" aria-label="P${index + 1} Remove point P" onclick="removePoint(${index})"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z"/></svg></button>
       </section>`).join('');
   }
   function healSplines() {
