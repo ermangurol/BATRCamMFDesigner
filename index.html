@@ -13,7 +13,7 @@
     h2 { margin:0 0 12px; font-size:19px; font-weight:600; }
     .toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; background:#f7f9fc; border:1px solid var(--line); border-radius:5px; padding:9px; }
     .table-id { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:#405264; } .table-id input { width:76px; padding:5px 6px; border:1px solid #aebbc6; border-radius:3px; font-family:Arial,sans-serif; }
-    .master-settings { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin:0 4px 0 auto; padding:5px 12px; border:1px solid var(--line); border-radius:3px; }
+    .master-settings { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin:0 4px 0 0; padding:5px 12px; border:1px solid var(--line); border-radius:3px; }
     .master-settings legend { padding:0 4px; font-size:11px; font-weight:700; color:#445463; } .master-settings label { display:flex; align-items:center; gap:4px; font-size:11px; margin:0; } .master-settings input { width:65px; padding:3px 5px; font-size:12px; margin:0; } .periodic-row select { width:auto; padding:3px; font-size:11px; margin:0; }
     button { padding:9px 16px; border:0; border-radius:4px; background:var(--blue); color:white; font-weight:600; cursor:pointer; box-shadow:inset 0 -1px #0003; }
     button:hover { filter:brightness(.91); } button.active { outline:3px solid #8ad49a; outline-offset:1px; } button.remove { background:#c42b1c; margin:0; width:100%; padding:9px 8px; } button:disabled { opacity:.45; cursor:not-allowed; }
@@ -71,6 +71,7 @@
       <button class="csv-action" type="button" data-i18n-title="csvUploadTitle" title="Import from CSV file" onclick="document.getElementById('csvFile').click()" data-i18n="csvUpload">↑ CSV Upload</button>
       <input id="csvFile" type="file" accept=".csv,text/csv" hidden onchange="importCsv(this.files[0]); this.value=''">
       <span id="modeStatus" class="hint">Drag mode: Hover over a point on the graph and drag it.</span>
+      <div style="flex-grow: 1;"></div>
       <fieldset class="master-settings">
         <legend data-i18n="masterScale">Master Scale</legend>
         <label for="masterMin" data-i18n="min">Minimum:</label><input id="masterMin" type="number" value="0" oninput="updateMasterRange()">
