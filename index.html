@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -43,10 +43,10 @@
     <h2>Beckhoff Motion Function Designer</h2>
     <div class="toolbar">
       <label class="table-id">Table ID <input id="tableId" type="number" min="0" step="1" value="1" onchange="updateTableId(this.value)"></label>
-      <button class="csv-action" type="button" title="CSV olarak dışa aktar" onclick="exportCsv()">↓ CSV Download</button>
-      <button class="csv-action" type="button" title="CSV dosyasından içe aktar" onclick="document.getElementById('csvFile').click()">↑ CSV Upload</button>
+      <button class="csv-action" type="button" title="Export as CSV" onclick="exportCsv()">↓ CSV Download</button>
+      <button class="csv-action" type="button" title="Import from CSV file" onclick="document.getElementById('csvFile').click()">↑ CSV Upload</button>
       <input id="csvFile" type="file" accept=".csv,text/csv" hidden onchange="importCsv(this.files[0]); this.value=''">
-      <span id="modeStatus" class="hint">Taşıma modu: Grafik üzerindeki bir noktanın üzerine gelin ve sürükleyin.</span>
+      <span id="modeStatus" class="hint">Drag mode: Hover over a point on the graph and drag it.</span>
       <fieldset class="master-settings">
         <legend>Master Scale</legend>
         <label for="masterMin">Minimum:</label><input id="masterMin" type="number" value="0" oninput="updateMasterRange()">
@@ -56,21 +56,21 @@
     </div>
     <div id="error" class="error" role="alert"></div>
     <div class="points">
-      <div class="point-header"><span>Nokta</span><span>Master Position</span><span>Slave Position</span><span>Önceki Noktadan Function</span><span>İşlem</span></div>
+      <div class="point-header"><span>Point</span><span>Master Position</span><span>Slave Position</span><span>Function from Previous Point</span><span>Action</span></div>
       <div id="pointsRows"></div>
     </div>
     <div style="position:relative; margin-top:14px;">
       <div class="graph-tools">
-        <button id="enableInsert" class="icon" type="button" title="Nokta ekleme modunu aç" aria-label="Nokta ekleme modunu aç" onclick="setMode('add')">+</button>
-        <button id="enableDelete" class="icon delete" type="button" title="Nokta silme modunu aç" aria-label="Nokta silme modunu aç" onclick="setMode('delete')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
-        <button id="disableMode" class="icon stop" type="button" title="Taşıma ve Kaydırma Modu" aria-label="Taşıma ve Kaydırma Modu" onclick="setMode(null)">
+        <button id="enableInsert" class="icon" type="button" title="Toggle add point mode" aria-label="Toggle add point mode" onclick="setMode('add')">+</button>
+        <button id="enableDelete" class="icon delete" type="button" title="Toggle delete point mode" aria-label="Toggle delete point mode" onclick="setMode('delete')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
+        <button id="disableMode" class="icon stop" type="button" title="Drag and Pan Mode" aria-label="Drag and Pan Mode" onclick="setMode(null)">
           <svg viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
         </button>
-        <label class="velocity-toggle" title="Hız (Velocity) grafiğini aç/kapat"><input type="checkbox" id="velocityToggleCheckbox" onchange="toggleVelocity()"> 📈 Hız Grafiği</label>
-        <label class="velocity-toggle" title="İvme (Acceleration) grafiğini aç/kapat"><input type="checkbox" id="accelerationToggleCheckbox" onchange="toggleAcceleration()"> 📈 İvme Grafiği</label>
+        <label class="velocity-toggle" title="Toggle Velocity Graph"><input type="checkbox" id="velocityToggleCheckbox" onchange="toggleVelocity()"> 📈 Velocity Graph</label>
+        <label class="velocity-toggle" title="Toggle Acceleration Graph"><input type="checkbox" id="accelerationToggleCheckbox" onchange="toggleAcceleration()"> 📈 Acceleration Graph</label>
       </div>
       <div class="graph-tools-right">
-        <button class="zoom-max-btn" type="button" title="Zoom Max (Görünümü Sıfırla)" onclick="resetZoom()">🔍 Zoom Max</button>
+        <button class="zoom-max-btn" type="button" title="Zoom Max (Reset View)" onclick="resetZoom()">🔍 Zoom Max</button>
       </div>
       <canvas id="graph" width="1500" height="520" style="margin-top:0;"></canvas>
     </div>
@@ -121,9 +121,9 @@
         <div class="field"><input aria-label="P${index + 1} Master Position" type="number" step="0.01" min="${masterMin}" max="${masterMax}" value="${point.x.toFixed(2)}" oninput="changePoint(${index}, 'x', this.value)"></div>
         <div class="field"><input aria-label="P${index + 1} Slave Position" type="number" step="0.01" value="${point.y.toFixed(2)}" oninput="changePoint(${index}, 'y', this.value)"></div>
         ${index === 0
-          ? '<div class="field"><input value="START (sabit)" disabled></div>'
-          : `<div class="field"><select aria-label="P${index} ile P${index + 1} arası fonksiyon" onchange="changePoint(${index}, 'function', this.value)">${functionOptions(point.function)}</select></div>`}
-        <button class="remove icon" type="button" title="P${index + 1} noktasını kaldır" aria-label="P${index + 1} noktasını kaldır" onclick="removePoint(${index})"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
+          ? '<div class="field"><input value="START (fixed)" disabled></div>'
+          : `<div class="field"><select aria-label="P${index} to P${index + 1} function" onchange="changePoint(${index}, 'function', this.value)">${functionOptions(point.function)}</select></div>`}
+        <button class="remove icon" type="button" title="P${index + 1} Remove point P" aria-label="P${index + 1} Remove point P" onclick="removePoint(${index})"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
       </section>`).join('');
   }
   function healSplines() {
@@ -131,7 +131,7 @@
     const isSplineRelated = (func) => func && func.includes('SPLINE');
     const isBoundary = (func) => ['SPLINE_NATURAL', 'SPLINE_TANGENTIAL', 'SPLINE_PERIODIC', 'SPLINE_LINEAR'].includes(func);
 
-    // Kural 1: Spline bloğunun içinden nokta koparılmasını (araya polinom sokulmasını) engelle.
+    // Rule 1: Prevent breaking the spline block from the inside (inserting a polynomial).
     for (let i = 1; i < points.length - 1; i++) {
       if (!isSplineRelated(points[i].function)) {
         if (isSplineRelated(points[i - 1].function) && isSplineRelated(points[i + 1].function)) {
@@ -141,7 +141,7 @@
       }
     }
 
-    // Kural 2: Sınır koşullarını ve ara noktaları garantiye al.
+    // Rule 2: Ensure boundary conditions and intermediate points.
     let i = 1;
     while (i < points.length) {
       if (isSplineRelated(points[i].function)) {
@@ -170,14 +170,14 @@
   }
   function updateTableId(value) {
     const nextId = Number(value);
-    if (!Number.isInteger(nextId) || nextId < 0) { setError('Table ID sıfır veya daha büyük bir tam sayı olmalıdır.'); document.getElementById('tableId').value = tableId; return; }
+    if (!Number.isInteger(nextId) || nextId < 0) { setError('Table ID must be an integer zero or greater.'); document.getElementById('tableId').value = tableId; return; }
     tableId = nextId; setError();
   }
   function setPeriodic(value) { periodic = value; }
   function updateMasterRange() {
     const nextMin = Number(document.getElementById('masterMin').value), nextMax = Number(document.getElementById('masterMax').value);
-    if (!Number.isFinite(nextMin) || !Number.isFinite(nextMax) || nextMin >= nextMax) { setError('Master Minimum değeri Maximum değerinden küçük olmalıdır.'); return; }
-    if (points.some(point => point.x < nextMin || point.x > nextMax)) { setError('Mevcut noktalar yeni Master aralığının dışında kalıyor. Önce noktaları bu aralığa taşıyın.'); return; }
+    if (!Number.isFinite(nextMin) || !Number.isFinite(nextMax) || nextMin >= nextMax) { setError('Master Minimum must be less than Maximum.'); return; }
+    if (points.some(point => point.x < nextMin || point.x > nextMax)) { setError('Existing points fall outside the new Master range. Move the points into this range first.'); return; }
     masterMin = nextMin; masterMax = nextMax; zoomState = null; setError(); renderPoints(); calculate();
   }
   function addPoint() {
@@ -260,7 +260,7 @@
       rawDataLines.push(line);
     }
 
-    if (!rawDataLines.length) throw new Error('CSV dosyasında veri bulunamadı.');
+    if (!rawDataLines.length) throw new Error('No data found in the CSV file.');
 
     let startIndex = 0, colMaster = -1, colSlave = -1, colFunc = -1;
     const firstTokens = splitCsvLine(rawDataLines[0]);
@@ -300,7 +300,7 @@
       const x = Number(rawX), y = Number(rawY);
 
       if (!Number.isFinite(x) || !Number.isFinite(y)) {
-        throw new Error(`Satır ${i + 1} için Master/Slave değeri geçersiz: '${rawDataLines[i]}'`);
+        throw new Error(`Satır ${i + 1} Invalid Master/Slave value at row: '${rawDataLines[i]}'`);
       }
 
       const rawFunc = colFunc >= 0 ? tokens[colFunc] : 'POLYNOM1';
@@ -308,13 +308,13 @@
       parsedPoints.push({ x, y, function: func === 'NOTDEF' ? 'POLYNOM1' : func });
     }
 
-    if (!parsedPoints.length) throw new Error('Geçerli nokta verisi bulunamadı.');
+    if (!parsedPoints.length) throw new Error('No valid point data found.');
     parsedPoints.sort((a, b) => a.x - b.x);
     delete parsedPoints[0].function;
 
     for (let i = 1; i < parsedPoints.length; i++) {
       if (Math.abs(parsedPoints[i].x - parsedPoints[i - 1].x) < 0.0001) {
-        throw new Error(`Aynı Master Position değerine sahip noktalar var (${parsedPoints[i].x.toFixed(2)}). Master değerleri tekil olmalıdır.`);
+        throw new Error(`There are points with the same Master Position value (${parsedPoints[i].x.toFixed(2)}). Master values must be unique.`);
       }
     }
 
@@ -342,19 +342,19 @@
       try {
         const handle = await window.showSaveFilePicker({
           suggestedName: defaultFileName,
-          types: [{ description: 'CSV Dosyası', accept: { 'text/csv': ['.csv'] } }]
+          types: [{ description: 'CSV File', accept: { 'text/csv': ['.csv'] } }]
         });
         const writable = await handle.createWritable();
         await writable.write(csvContent);
         await writable.close();
         return;
       } catch (err) {
-        if (err.name !== 'AbortError') console.error('Kaydetme başarısız:', err);
+        if (err.name !== 'AbortError') console.error('Save failed:', err);
         return;
       }
     }
 
-    // Modern API desteklenmiyorsa eski yönteme dön
+    // Fallback to old method if Modern API is not supported
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob); link.download = defaultFileName;
@@ -366,7 +366,7 @@
     reader.onload = () => {
       try {
         const result = parseCsv(reader.result);
-        if (result.points.length > MAX_POINTS) throw new Error(`En fazla ${MAX_POINTS} nokta yüklenebilir. Dosyada ${result.points.length} nokta var.`);
+        if (result.points.length > MAX_POINTS) throw new Error(`Maximum ${MAX_POINTS} points can be loaded. The file contains ${result.points.length} points.`);
 
         tableId = result.tableId;
         periodic = result.periodic;
@@ -394,10 +394,10 @@
         renderPoints();
         calculate();
         const statusEl = document.getElementById('modeStatus');
-        if (statusEl) statusEl.textContent = `CSV başarıyla içe aktarıldı (${points.length} nokta).`;
-      } catch (error) { setError(`CSV içe aktarılamadı: ${error.message}`); }
+        if (statusEl) statusEl.textContent = `CSV successfully imported (${points.length} points).`;
+      } catch (error) { setError(`Failed to import CSV: ${error.message}`); }
     };
-    reader.onerror = () => setError('Dosya okunurken bir hata oluştu.');
+    reader.onerror = () => setError('An error occurred while reading the file.');
     reader.readAsText(file, 'utf-8');
   }
   function setMode(nextMode) {
@@ -405,10 +405,10 @@
     document.getElementById('enableInsert').classList.toggle('active', mode === 'add');
     document.getElementById('enableDelete').classList.toggle('active', mode === 'delete');
     document.getElementById('modeStatus').textContent = mode === 'add'
-      ? 'Ekleme modu açık: Grafik alanında istediğiniz konuma tıklayın.'
+      ? 'Add mode active: Click anywhere on the graph area to insert a point.'
       : mode === 'delete'
-        ? 'Silme modu açık: Silmek istediğiniz noktaya tıklayın.'
-        : 'Taşıma modu: Grafik üzerindeki bir noktanın üzerine gelin ve sürükleyin.';
+        ? 'Delete mode active: Click on a point to delete it.'
+        : 'Drag mode: Hover over a point on the graph and drag it.';
     document.getElementById('graph').style.cursor = mode === 'add' ? 'crosshair' : mode === 'delete' ? deleteCursor : 'grab';
   }
   function graphPointerPosition(event, scale = graphScale) {
@@ -428,7 +428,7 @@
     const index = points.findIndex(point => point.x > position.x);
     const insertAt = index === -1 ? points.length : index;
     const left = points[insertAt - 1], right = points[insertAt];
-    if ((left && position.x - left.x < .0001) || (right && right.x - position.x < .0001)) { setError('Yeni nokta, mevcut bir noktayla aynı Master Position değerine sahip olamaz.'); return; }
+    if ((left && position.x - left.x < .0001) || (right && right.x - position.x < .0001)) { setError('The new point cannot have the same Master Position value as an existing point.'); return; }
     
     let newFunc = 'POLYNOM1';
     if (insertAt < points.length && points[insertAt]) newFunc = points[insertAt].function;
@@ -614,7 +614,7 @@
   }
 
   function calculate() {
-    if (!validPoints()) { setError('Her Master Position değeri bir önceki noktadan büyük olmalıdır.'); return; }
+    if (!validPoints()) { setError('Each Master Position value must be greater than the previous point.'); return; }
     setError();
     if (healSplines()) {
       renderPoints();
@@ -626,12 +626,12 @@
   function updatePosition() {
     if (!validPoints()) return;
     const master = Number(document.getElementById('masterInput').value); if (!Number.isFinite(master)) return;
-    if (!points.length) { document.getElementById('slaveOutput').textContent = '-'; document.getElementById('slopeOutput').textContent = '-'; document.getElementById('segmentInfo').textContent = 'Nokta bulunmuyor. Grafik Master ve Slave için 0–100 ölçeğindedir.'; return; }
+    if (!points.length) { document.getElementById('slaveOutput').textContent = '-'; document.getElementById('slopeOutput').textContent = '-'; document.getElementById('segmentInfo').textContent = 'No points available. Graph uses 0-100 scale for Master and Slave.'; return; }
     document.getElementById('slaveOutput').textContent = getSlave(master).toFixed(2);
     document.getElementById('slopeOutput').textContent = getSlope(master).toFixed(2);
-    if (points.length === 1) { document.getElementById('segmentInfo').textContent = 'Yalnızca sabit P1 mevcut; eğri oluşturmak için nokta ekleyin.'; return; }
+    if (points.length === 1) { document.getElementById('segmentInfo').textContent = 'Only stationary P1 exists; add points to create a curve.'; return; }
     const i = findSegment(master), a = points[i], b = points[i + 1];
-    document.getElementById('segmentInfo').textContent = `Aktif bölüm: P${i + 1} → P${i + 2} (${b.function}) | Master aralığı: ${a.x.toFixed(2)} – ${b.x.toFixed(2)}`;
+    document.getElementById('segmentInfo').textContent = `Active segment: P${i + 1} → P${i + 2} (${b.function}) | Master range: ${a.x.toFixed(2)} – ${b.x.toFixed(2)}`;
   }
   function drawGraph() {
     const canvas = document.getElementById('graph'), ctx = canvas.getContext('2d'), pad = 100, width = canvas.width - pad * 2, height = canvas.height - pad * 2;
