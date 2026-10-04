@@ -310,8 +310,9 @@
     masterMin = nextMin; masterMax = nextMax; zoomState = null; setError(); renderPoints(); calculate();
   }
   function addPoint() {
-    if (points.length >= MAX_POINTS) return;
-    const last = points.at(-1), beforeLast = points.at(-2);
+      if (points.length >= MAX_POINTS) return;
+      if (points.length === 0) { points.push({ x: masterMin, y: DEFAULT_SLAVE_MIN, function: 'POLYNOM1' }); renderPoints(); calculate(); return; }
+      const last = points.at(-1), beforeLast = points.at(-2);
     const step = beforeLast ? Math.max(1, last.x - beforeLast.x) : 50;
     const newFunc = (last && last.function) ? last.function : 'POLYNOM1';
     points.push({ x: last.x + step, y: last.y, function: newFunc });
@@ -925,7 +926,7 @@
     
     ctx.restore();
     ctx.fillStyle='#111'; ctx.font='14px Arial'; ctx.textAlign='center';
-    ctx.fillText('Master Position', canvas.width/2, canvas.height-20);
+    ctx.fillText(getI18n('graphMaster'), canvas.width/2, canvas.height-20);
     ctx.save(); ctx.translate(18, canvas.height/2); ctx.rotate(-Math.PI/2); ctx.fillText(getI18n('graphVel'), 0, 0); ctx.restore();
   }
   function toggleAcceleration() {
@@ -994,7 +995,7 @@
     
     ctx.restore();
     ctx.fillStyle='#111'; ctx.font='14px Arial'; ctx.textAlign='center';
-    ctx.fillText('Master Position', canvas.width/2, canvas.height-20);
+    ctx.fillText(getI18n('graphMaster'), canvas.width/2, canvas.height-20);
     ctx.save(); ctx.translate(18, canvas.height/2); ctx.rotate(-Math.PI/2); ctx.fillText(getI18n('graphAcc'), 0, 0); ctx.restore();
   }
   
