@@ -1,0 +1,901 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Beckhoff Motion Function Designer</title>
+  <style>
+    :root { --navy:#222f3b; --red:#e30613; --panel:#f7f9fc; --line:#cfd6de; --green:#008a1e; --blue:#064bc7; --text:#202c37; }
+    * { box-sizing: border-box; }
+    body { font-family:Arial, sans-serif; background:#e9edf3; margin:0; color:var(--text); -webkit-font-smoothing:antialiased; text-rendering:geometricPrecision; }
+    .container { max-width:1520px; margin:auto; padding:16px 12px 26px; }
+    h2 { margin:0 0 12px; font-size:19px; font-weight:600; }
+    .toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; background:#f7f9fc; border:1px solid var(--line); border-radius:5px; padding:9px; }
+    .table-id { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:#405264; } .table-id input { width:76px; padding:5px 6px; border:1px solid #aebbc6; border-radius:3px; font-family:Arial,sans-serif; }
+    .master-settings { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin:0 4px 0 auto; padding:5px 12px; border:1px solid var(--line); border-radius:3px; }
+    .master-settings legend { padding:0 4px; font-size:11px; font-weight:700; color:#445463; } .master-settings label { display:flex; align-items:center; gap:4px; font-size:11px; margin:0; } .master-settings input { width:65px; padding:3px 5px; font-size:12px; margin:0; } .periodic-row select { width:auto; padding:3px; font-size:11px; margin:0; }
+    button { padding:9px 16px; border:0; border-radius:4px; background:var(--blue); color:white; font-weight:600; cursor:pointer; box-shadow:inset 0 -1px #0003; }
+    button:hover { filter:brightness(.91); } button.active { outline:3px solid #8ad49a; outline-offset:1px; } button.remove { background:#c42b1c; margin:0; width:100%; padding:9px 8px; } button:disabled { opacity:.45; cursor:not-allowed; }
+    button.icon { width:35px; height:35px; padding:0; border-radius:4px; font-size:21px; line-height:1; } button.icon svg { width:18px; height:18px; vertical-align:middle; fill:currentColor; } button.icon.delete { background:#c42b1c; } button.icon.stop { background:#758292; } #enableInsert { background:var(--green); }
+    button.csv-action { height:35px; padding:0 12px; font-size:12px; background:#dce5f1; color:#30475b; box-shadow:none; }
+    .zoom-max-btn { padding:5px 10px; font-size:11px; font-weight:700; background:#fff; border:1px solid #aebbc6; border-radius:4px; color:#30475b; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.08); transition:background 0.2s; }
+    .zoom-max-btn:hover { background:#eaf0f6; }
+    .graph-tools { position:absolute; top:12px; left:12px; display:flex; gap:6px; z-index:10; }
+    .graph-tools-right { position:absolute; top:12px; right:12px; z-index:10; display:flex; gap:8px; align-items:center; }
+    .velocity-toggle { background:rgba(255,255,255,0.95); border:1px solid rgba(0,0,0,0.1); border-radius:4px; padding:0 12px; height:35px; font-size:12px; font-weight:700; color:#30475b; cursor:pointer; display:flex; align-items:center; gap:6px; box-shadow:0 2px 4px rgba(0,0,0,0.15); transition:background 0.2s; }
+    .velocity-toggle:hover { background:#eaf0f6; }
+    .velocity-toggle input { margin:0; cursor:pointer; width:auto; }
+    .graph-tools button.icon { box-shadow:0 2px 4px rgba(0,0,0,0.15); border:1px solid rgba(0,0,0,0.1); }
+    .hint, .error { font-size:13px; } .hint { color:#516273; } .error { color:#c42b1c; min-height:16px; }
+    .points { height:285px; overflow:auto; border:1px solid var(--line); border-radius:5px; background:#fff; }
+    .point, .point-header { display:grid; grid-template-columns:58px minmax(120px,1fr) minmax(120px,1fr) minmax(150px,1fr) 45px; gap:7px; min-width:550px; padding:4px 8px; }
+    .point { align-items:center; border-bottom:1px solid #e3e8ed; background:#fff; } .point:nth-child(even) { background:#f8fafc; } .point:last-child { border-bottom:0; } .point h3 { margin:0; font-size:13px; font-weight:700; }
+    .point-header { position:sticky; top:0; z-index:1; background:#eaf0f6; color:#33495c; font-size:13px; font-weight:700; border-bottom:1px solid var(--line); }
+    .field { margin:0; } label { display:block; font-size:12px; font-weight:bold; margin-bottom:5px; } .function-label { color:#0078d4; }
+    input, select { width:100%; padding:4px 6px; border:1px solid #aebbc6; border-radius:3px; font-size:13px; font-family:Arial, sans-serif; font-weight:400; background:#fff; color:#1d2c38; }
+    canvas { display:block; width:100%; height:520px; margin-top:14px; border:1px solid var(--line); border-radius:4px; background:#fff; touch-action:none; }
+    .result { margin-top:14px; padding:16px; background:#f7f9fc; border:1px solid var(--line); border-radius:5px; } .result input { width:150px; } .value { font-weight:700; margin-left:10px; }
+    .segment { margin-top:14px; padding:10px; border-radius:3px; background:#e5ebf1; font-size:13px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Beckhoff Motion Function Designer</h2>
+    <div class="toolbar">
+      <label class="table-id">Table ID <input id="tableId" type="number" min="0" step="1" value="1" onchange="updateTableId(this.value)"></label>
+      <button class="csv-action" type="button" title="CSV olarak dışa aktar" onclick="exportCsv()">↓ CSV Download</button>
+      <button class="csv-action" type="button" title="CSV dosyasından içe aktar" onclick="document.getElementById('csvFile').click()">↑ CSV Upload</button>
+      <input id="csvFile" type="file" accept=".csv,text/csv" hidden onchange="importCsv(this.files[0]); this.value=''">
+      <span id="modeStatus" class="hint">Taşıma modu: Grafik üzerindeki bir noktanın üzerine gelin ve sürükleyin.</span>
+      <fieldset class="master-settings">
+        <legend>Master Scale</legend>
+        <label for="masterMin">Minimum:</label><input id="masterMin" type="number" value="0" oninput="updateMasterRange()">
+        <label for="masterMax">Maximum:</label><input id="masterMax" type="number" value="700" oninput="updateMasterRange()">
+        <label for="periodic" class="periodic-row">Periodic <select id="periodic" onchange="setPeriodic(this.value === 'true')"><option value="true">True</option><option value="false" selected>False</option></select></label>
+      </fieldset>
+    </div>
+    <div id="error" class="error" role="alert"></div>
+    <div class="points">
+      <div class="point-header"><span>Nokta</span><span>Master Position</span><span>Slave Position</span><span>Önceki Noktadan Function</span><span>İşlem</span></div>
+      <div id="pointsRows"></div>
+    </div>
+    <div style="position:relative; margin-top:14px;">
+      <div class="graph-tools">
+        <button id="enableInsert" class="icon" type="button" title="Nokta ekleme modunu aç" aria-label="Nokta ekleme modunu aç" onclick="setMode('add')">+</button>
+        <button id="enableDelete" class="icon delete" type="button" title="Nokta silme modunu aç" aria-label="Nokta silme modunu aç" onclick="setMode('delete')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
+        <button id="disableMode" class="icon stop" type="button" title="Taşıma ve Kaydırma Modu" aria-label="Taşıma ve Kaydırma Modu" onclick="setMode(null)">
+          <svg viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+        </button>
+        <label class="velocity-toggle" title="Hız (Velocity) grafiğini aç/kapat"><input type="checkbox" id="velocityToggleCheckbox" onchange="toggleVelocity()"> 📈 Hız Grafiği</label>
+        <label class="velocity-toggle" title="İvme (Acceleration) grafiğini aç/kapat"><input type="checkbox" id="accelerationToggleCheckbox" onchange="toggleAcceleration()"> 📈 İvme Grafiği</label>
+      </div>
+      <div class="graph-tools-right">
+        <button class="zoom-max-btn" type="button" title="Zoom Max (Görünümü Sıfırla)" onclick="resetZoom()">🔍 Zoom Max</button>
+      </div>
+      <canvas id="graph" width="1500" height="520" style="margin-top:0;"></canvas>
+    </div>
+    <div id="velocityWrapper" style="display:none; position:relative; margin-top:14px;">
+      <canvas id="velocityGraph" width="1500" height="520" style="display:block; width:100%; border:1px solid var(--line); border-radius:4px; background:#fff; margin-top:0; touch-action:none;"></canvas>
+    </div>
+    <div id="accelerationWrapper" style="display:none; position:relative; margin-top:14px;">
+      <canvas id="accelerationGraph" width="1500" height="520" style="display:block; width:100%; border:1px solid var(--line); border-radius:4px; background:#fff; margin-top:0; touch-action:none;"></canvas>
+    </div>
+    <div class="result">
+      <b>Master Position:</b> <input id="masterInput" type="number" value="25" oninput="updatePosition()">
+      <br><br><b>Slave Position:</b><span id="slaveOutput" class="value">-</span>
+      <br><br><b>Slave / Master Slope:</b><span id="slopeOutput" class="value">-</span>
+      <div id="segmentInfo" class="segment">-</div>
+    </div>
+  </div>
+<script>
+  const MAX_POINTS = 1000;
+  const DEFAULT_SLAVE_MIN = 0, DEFAULT_SLAVE_MAX = 100;
+  let tableId = 1, masterMin = 0, masterMax = 700, periodic = false, hoverPointIndex = null;
+  let points = [
+    { x: 0, y: 0 },
+    { x: 50, y: 80, function: 'POLYNOM1' }
+  ];
+  let mode = null;
+  let graphScale = null;
+  let drag = null;
+  let zoomState = null;
+  function resetZoom() { zoomState = null; drawGraph(); }
+  const functions = [
+    ['NOTDEF', 'NOTDEF'], ['POLYNOM1', 'POLYNOM1'], ['POLYNOM3', 'POLYNOM3'], ['POLYNOM5', 'POLYNOM5'], ['POLYNOM8', 'POLYNOM8'],
+    ['SINUSLINIE', 'SINUSLINIE'], ['MODSINUSLINIE', 'MODSINUSLINIE'], ['BESTEHORN', 'BESTEHORN'],
+    ['POLYNOM5_MM', 'POLYNOM5_MM'], ['SINUS_GERADE_KOMBI', 'SINUS_GERADE_KOMBI'], ['HARMONIC_KOMBI_RT', 'HARMONIC_KOMBI_RT'],
+    ['HARMONIC_KOMBI_TR', 'HARMONIC_KOMBI_TR'], ['HARMONIC_KOMBI_VT', 'HARMONIC_KOMBI_VT'], ['HARMONIC_KOMBI_TV', 'HARMONIC_KOMBI_TV'],
+    ['POLYNOM7_MM', 'POLYNOM7_MM'], ['POLYNOM6STP', 'POLYNOM6STP'], ['POLYNOM6WDP', 'POLYNOM6WDP'],
+    ['SPLINE', 'MOTIONFUNCTYPE_SPLINE'],
+    ['SPLINE_NATURAL', 'MOTIONFUNCTYPE_SPLINE_NATURAL'],
+    ['SPLINE_TANGENTIAL', 'MOTIONFUNCTYPE_SPLINE_TANGENTIAL'],
+    ['SPLINE_PERIODIC', 'MOTIONFUNCTYPE_SPLINE_PERIODIC'],
+    ['SPLINE_LINEAR', 'MOTIONFUNCTYPE_SPLINE_LINEAR']
+  ];
+  const deleteCursor = 'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2724%27 height=%2724%27 viewBox=%270 0 24 24%27%3E%3Cpath fill=%27%23c42b1c%27 d=%27M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z%27/%3E%3C/svg%3E") 12 12, pointer';
+
+  function functionOptions(selected) { return functions.map(([value, label]) => `<option value="${value}" ${value === selected ? 'selected' : ''}>${label}</option>`).join(''); }
+  function renderPoints() {
+    document.getElementById('pointsRows').innerHTML = points.map((point, index) => `
+      <section class="point"><h3>P${index + 1}</h3>
+        <div class="field"><input aria-label="P${index + 1} Master Position" type="number" step="0.01" min="${masterMin}" max="${masterMax}" value="${point.x.toFixed(2)}" oninput="changePoint(${index}, 'x', this.value)"></div>
+        <div class="field"><input aria-label="P${index + 1} Slave Position" type="number" step="0.01" value="${point.y.toFixed(2)}" oninput="changePoint(${index}, 'y', this.value)"></div>
+        ${index === 0
+          ? '<div class="field"><input value="START (sabit)" disabled></div>'
+          : `<div class="field"><select aria-label="P${index} ile P${index + 1} arası fonksiyon" onchange="changePoint(${index}, 'function', this.value)">${functionOptions(point.function)}</select></div>`}
+        <button class="remove icon" type="button" title="P${index + 1} noktasını kaldır" aria-label="P${index + 1} noktasını kaldır" onclick="removePoint(${index})"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
+      </section>`).join('');
+  }
+  function healSplines() {
+    let madeChanges = false;
+    const isSplineRelated = (func) => func && func.includes('SPLINE');
+    const isBoundary = (func) => ['SPLINE_NATURAL', 'SPLINE_TANGENTIAL', 'SPLINE_PERIODIC', 'SPLINE_LINEAR'].includes(func);
+
+    // Kural 1: Spline bloğunun içinden nokta koparılmasını (araya polinom sokulmasını) engelle.
+    for (let i = 1; i < points.length - 1; i++) {
+      if (!isSplineRelated(points[i].function)) {
+        if (isSplineRelated(points[i - 1].function) && isSplineRelated(points[i + 1].function)) {
+          points[i].function = 'SPLINE';
+          madeChanges = true;
+        }
+      }
+    }
+
+    // Kural 2: Sınır koşullarını ve ara noktaları garantiye al.
+    let i = 1;
+    while (i < points.length) {
+      if (isSplineRelated(points[i].function)) {
+        let start = i, end = i;
+        while (end + 1 < points.length && isSplineRelated(points[end + 1].function)) end++;
+        
+        if (!isBoundary(points[start].function)) { points[start].function = 'SPLINE_NATURAL'; madeChanges = true; }
+        if (end > start && !isBoundary(points[end].function)) { points[end].function = 'SPLINE_NATURAL'; madeChanges = true; }
+        
+        for (let j = start + 1; j < end; j++) {
+          if (points[j].function !== 'SPLINE') { points[j].function = 'SPLINE'; madeChanges = true; }
+        }
+        i = end + 1;
+      } else {
+        i++;
+      }
+    }
+    return madeChanges;
+  }
+
+  function changePoint(index, key, value) {
+    if (key === 'function') points[index][key] = value;
+    else if (key === 'x') points[index].x = Math.min(masterMax, Math.max(masterMin, Number(value)));
+    else points[index][key] = Number(value);
+    calculate();
+  }
+  function updateTableId(value) {
+    const nextId = Number(value);
+    if (!Number.isInteger(nextId) || nextId < 0) { setError('Table ID sıfır veya daha büyük bir tam sayı olmalıdır.'); document.getElementById('tableId').value = tableId; return; }
+    tableId = nextId; setError();
+  }
+  function setPeriodic(value) { periodic = value; }
+  function updateMasterRange() {
+    const nextMin = Number(document.getElementById('masterMin').value), nextMax = Number(document.getElementById('masterMax').value);
+    if (!Number.isFinite(nextMin) || !Number.isFinite(nextMax) || nextMin >= nextMax) { setError('Master Minimum değeri Maximum değerinden küçük olmalıdır.'); return; }
+    if (points.some(point => point.x < nextMin || point.x > nextMax)) { setError('Mevcut noktalar yeni Master aralığının dışında kalıyor. Önce noktaları bu aralığa taşıyın.'); return; }
+    masterMin = nextMin; masterMax = nextMax; zoomState = null; setError(); renderPoints(); calculate();
+  }
+  function addPoint() {
+    if (points.length >= MAX_POINTS) return;
+    const last = points.at(-1), beforeLast = points.at(-2);
+    const step = beforeLast ? Math.max(1, last.x - beforeLast.x) : 50;
+    const newFunc = last ? last.function : 'POLYNOM1';
+    points.push({ x: last.x + step, y: last.y, function: newFunc });
+    renderPoints(); calculate();
+  }
+  function normalizeFunction(raw) {
+    if (!raw) return 'POLYNOM1';
+    const clean = String(raw).trim().toUpperCase().replace(/[\s\-_]/g, '');
+    if (clean === 'START' || clean === 'NOTDEF') return 'NOTDEF';
+    const match = functions.find(([v]) => v.replace(/[\s\-_]/g, '') === clean);
+    return match ? match[0] : 'POLYNOM1';
+  }
+  function splitCsvLine(line) {
+    let delim = ',';
+    if (line.includes('\t')) delim = '\t';
+    else if (line.includes(';')) delim = ';';
+    else if (!line.includes(',') && (/\s{2,}/.test(line.trim()) || /\d\s+[A-Za-z0-9.\-]/.test(line.trim()))) delim = /\s+/;
+
+    let tokens = [];
+    if (typeof delim === 'string') {
+      const regex = new RegExp(`(?:^|${delim})(?:"([^"]*)"|([^${delim}]*))`, 'g');
+      let match;
+      while ((match = regex.exec(line)) !== null) {
+        let val = match[1] !== undefined ? match[1] : match[2];
+        tokens.push(val.trim());
+      }
+    } else {
+      tokens = line.trim().split(delim).map(c => c.trim().replace(/^["']|["']$/g, '').trim());
+    }
+    return tokens;
+  }
+  function parseCsv(content) {
+    const lines = String(content).replace(/^\uFEFF/, '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    let importedTableId = tableId, importedPeriodic = periodic, importedMasterMin = null, importedMasterMax = null;
+    const rawDataLines = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const tidMatch = line.match(/^table[-_ ]*id\s*[:=,;]?\s*(.*)$/i);
+      if (tidMatch) {
+        let val = tidMatch[1].trim();
+        if (!val && i + 1 < lines.length && /^\d+$/.test(lines[i + 1])) val = lines[++i];
+        const num = Number(val.replace(/[,;]/g, '').trim());
+        if (Number.isInteger(num) && num >= 0) importedTableId = num;
+        continue;
+      }
+
+      const perMatch = line.match(/^periodic\s*[:=,;]?\s*(.*)$/i);
+      if (perMatch) {
+        let val = perMatch[1].trim();
+        if (!val && i + 1 < lines.length && /^(true|false)$/i.test(lines[i + 1])) val = lines[++i];
+        val = val.replace(/[,;]/g, '').trim().toLowerCase();
+        if (val === 'true' || val === '1') importedPeriodic = true;
+        else if (val === 'false' || val === '0') importedPeriodic = false;
+        continue;
+      }
+
+      const minMatch = line.match(/^master\s*min\s*[:=,;]?\s*(.*)$/i);
+      if (minMatch) {
+        const num = Number(minMatch[1].replace(/[,;]/g, '').replace(',', '.').trim());
+        if (Number.isFinite(num)) importedMasterMin = num;
+        continue;
+      }
+      const maxMatch = line.match(/^master\s*max\s*[:=,;]?\s*(.*)$/i);
+      if (maxMatch) {
+        const num = Number(maxMatch[1].replace(/[,;]/g, '').replace(',', '.').trim());
+        if (Number.isFinite(num)) importedMasterMax = num;
+        continue;
+      }
+
+      if (/^(begintable|endtable|tabletype|functiontype|lines\s*=)/i.test(line) || line.startsWith('#') || line.startsWith('//')) {
+        continue;
+      }
+
+      rawDataLines.push(line);
+    }
+
+    if (!rawDataLines.length) throw new Error('CSV dosyasında veri bulunamadı.');
+
+    let startIndex = 0, colMaster = -1, colSlave = -1, colFunc = -1;
+    const firstTokens = splitCsvLine(rawDataLines[0]);
+    const isHeader = firstTokens.some(t => /^(point|nokta|p|master|slave|func|fonk|x|y)/i.test(t));
+
+    if (isHeader) {
+      startIndex = 1;
+      firstTokens.forEach((t, idx) => {
+        const lower = t.toLowerCase();
+        if (colMaster === -1 && (lower.includes('master') || lower === 'x')) colMaster = idx;
+        else if (colSlave === -1 && (lower.includes('slave') || lower === 'y')) colSlave = idx;
+        else if (colFunc === -1 && (lower.includes('func') || lower.includes('fonk') || lower === 'type')) colFunc = idx;
+      });
+    }
+
+    if (colMaster === -1 || colSlave === -1) {
+      const sampleTokens = splitCsvLine(startIndex < rawDataLines.length ? rawDataLines[startIndex] : rawDataLines[0]);
+      const num0 = Number(sampleTokens[0]?.replace(',', '.'));
+      if (Number.isFinite(num0)) {
+        colMaster = 0;
+        colSlave = 1;
+        colFunc = sampleTokens.length > 2 ? 2 : -1;
+      } else {
+        colMaster = 1;
+        colSlave = 2;
+        colFunc = sampleTokens.length > 3 ? 3 : -1;
+      }
+    }
+
+    const parsedPoints = [];
+    for (let i = startIndex; i < rawDataLines.length; i++) {
+      const tokens = splitCsvLine(rawDataLines[i]);
+      if (!tokens.length || (tokens.length === 1 && !tokens[0])) continue;
+
+      const rawX = tokens[colMaster]?.replace(',', '.');
+      const rawY = tokens[colSlave]?.replace(',', '.');
+      const x = Number(rawX), y = Number(rawY);
+
+      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        throw new Error(`Satır ${i + 1} için Master/Slave değeri geçersiz: '${rawDataLines[i]}'`);
+      }
+
+      const rawFunc = colFunc >= 0 ? tokens[colFunc] : 'POLYNOM1';
+      const func = normalizeFunction(rawFunc);
+      parsedPoints.push({ x, y, function: func === 'NOTDEF' ? 'POLYNOM1' : func });
+    }
+
+    if (!parsedPoints.length) throw new Error('Geçerli nokta verisi bulunamadı.');
+    parsedPoints.sort((a, b) => a.x - b.x);
+    delete parsedPoints[0].function;
+
+    for (let i = 1; i < parsedPoints.length; i++) {
+      if (Math.abs(parsedPoints[i].x - parsedPoints[i - 1].x) < 0.0001) {
+        throw new Error(`Aynı Master Position değerine sahip noktalar var (${parsedPoints[i].x.toFixed(2)}). Master değerleri tekil olmalıdır.`);
+      }
+    }
+
+    return {
+      tableId: importedTableId,
+      periodic: importedPeriodic,
+      masterMin: importedMasterMin,
+      masterMax: importedMasterMax,
+      points: parsedPoints
+    };
+  }
+  async function exportCsv() {
+    const header = 'Point,MasterPosition,SlavePosition,Function';
+    const rows = points.map((point, index) => `P${index + 1},${point.x.toFixed(2)},${point.y.toFixed(2)},${index === 0 ? 'START' : point.function}`);
+    const metadata = [
+      `TableID,${tableId}`,
+      `Periodic,${periodic ? 'true' : 'false'}`,
+      `MasterMin,${masterMin}`,
+      `MasterMax,${masterMax}`
+    ];
+    const csvContent = [...metadata, header, ...rows].join('\r\n');
+    const defaultFileName = `motion-function-table-${tableId}.csv`;
+
+    if (window.showSaveFilePicker) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: defaultFileName,
+          types: [{ description: 'CSV Dosyası', accept: { 'text/csv': ['.csv'] } }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(csvContent);
+        await writable.close();
+        return;
+      } catch (err) {
+        if (err.name !== 'AbortError') console.error('Kaydetme başarısız:', err);
+        return;
+      }
+    }
+
+    // Modern API desteklenmiyorsa eski yönteme dön
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob); link.download = defaultFileName;
+    link.click(); URL.revokeObjectURL(link.href);
+  }
+  function importCsv(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const result = parseCsv(reader.result);
+        if (result.points.length > MAX_POINTS) throw new Error(`En fazla ${MAX_POINTS} nokta yüklenebilir. Dosyada ${result.points.length} nokta var.`);
+
+        tableId = result.tableId;
+        periodic = result.periodic;
+        document.getElementById('tableId').value = tableId;
+        document.getElementById('periodic').value = String(periodic);
+
+        let newMin = masterMin, newMax = masterMax;
+        if (result.masterMin !== null) newMin = result.masterMin;
+        if (result.masterMax !== null) newMax = result.masterMax;
+
+        const minX = result.points[0].x, maxX = result.points.at(-1).x;
+        if (minX < newMin) newMin = Math.floor(minX);
+        if (maxX > newMax) newMax = Math.ceil(maxX);
+        if (newMin >= newMax) newMax = newMin + 100;
+
+        masterMin = newMin;
+        masterMax = newMax;
+        document.getElementById('masterMin').value = masterMin;
+        document.getElementById('masterMax').value = masterMax;
+
+        points = result.points;
+        zoomState = null;
+        setError();
+        setMode(null);
+        renderPoints();
+        calculate();
+        const statusEl = document.getElementById('modeStatus');
+        if (statusEl) statusEl.textContent = `CSV başarıyla içe aktarıldı (${points.length} nokta).`;
+      } catch (error) { setError(`CSV içe aktarılamadı: ${error.message}`); }
+    };
+    reader.onerror = () => setError('Dosya okunurken bir hata oluştu.');
+    reader.readAsText(file, 'utf-8');
+  }
+  function setMode(nextMode) {
+    mode = nextMode;
+    document.getElementById('enableInsert').classList.toggle('active', mode === 'add');
+    document.getElementById('enableDelete').classList.toggle('active', mode === 'delete');
+    document.getElementById('modeStatus').textContent = mode === 'add'
+      ? 'Ekleme modu açık: Grafik alanında istediğiniz konuma tıklayın.'
+      : mode === 'delete'
+        ? 'Silme modu açık: Silmek istediğiniz noktaya tıklayın.'
+        : 'Taşıma modu: Grafik üzerindeki bir noktanın üzerine gelin ve sürükleyin.';
+    document.getElementById('graph').style.cursor = mode === 'add' ? 'crosshair' : mode === 'delete' ? deleteCursor : 'grab';
+  }
+  function graphPointerPosition(event, scale = graphScale) {
+    const canvas = document.getElementById('graph'), rect = canvas.getBoundingClientRect();
+    const px = (event.clientX - rect.left) * canvas.width / rect.width;
+    const py = (event.clientY - rect.top) * canvas.height / rect.height;
+    return { px, py, x: scale.xMin + (px - scale.pad) / scale.width * (scale.xMax - scale.xMin), y: scale.yMax - (py - scale.pad) / scale.height * (scale.yMax - scale.yMin) };
+  }
+  function pointAt(px, py) {
+    if (!graphScale) return -1;
+    return points.findIndex(point => Math.hypot(graphScale.sx(point.x) - px, graphScale.sy(point.y) - py) <= 11);
+  }
+  function insertPointFromGraph(event) {
+    if (!graphScale || points.length >= MAX_POINTS) return;
+    const position = graphPointerPosition(event);
+    if (position.px < graphScale.pad || position.px > graphScale.pad + graphScale.width || position.py < graphScale.pad || position.py > graphScale.pad + graphScale.height) return;
+    const index = points.findIndex(point => point.x > position.x);
+    const insertAt = index === -1 ? points.length : index;
+    const left = points[insertAt - 1], right = points[insertAt];
+    if ((left && position.x - left.x < .0001) || (right && right.x - position.x < .0001)) { setError('Yeni nokta, mevcut bir noktayla aynı Master Position değerine sahip olamaz.'); return; }
+    
+    let newFunc = 'POLYNOM1';
+    if (insertAt < points.length && points[insertAt]) newFunc = points[insertAt].function;
+    else if (points.length > 0) newFunc = points.at(-1).function;
+    
+    points.splice(insertAt, 0, { x: position.x, y: position.y, function: newFunc });
+    renderPoints(); calculate();
+  }
+  function onGraphPointerDown(event) {
+    const position = graphPointerPosition(event);
+    const insidePlot = position.px >= graphScale.pad && position.px <= graphScale.pad + graphScale.width && position.py >= graphScale.pad && position.py <= graphScale.pad + graphScale.height;
+    if (!insidePlot) { if (mode) setMode(null); return; }
+    if (mode === 'add') { insertPointFromGraph(event); return; }
+    const index = pointAt(position.px, position.py);
+    if (mode === 'delete') {
+      if (index >= 0) { points.splice(index, 1); renderPoints(); calculate(); }
+      return;
+    }
+    if (index < 0) {
+      if (!zoomState) zoomState = { xMin: graphScale.xMin, xMax: graphScale.xMax, yMin: graphScale.yMin, yMax: graphScale.yMax };
+      drag = { pan: true, startX: event.clientX, startY: event.clientY, startZoom: { ...zoomState } };
+      event.currentTarget.setPointerCapture(event.pointerId);
+      event.currentTarget.style.cursor = 'grabbing';
+      return;
+    }
+    drag = { index, scale: graphScale };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    event.currentTarget.style.cursor = 'grabbing';
+  }
+  function onGraphPointerMove(event) {
+    if (!drag) {
+      const position = graphPointerPosition(event), index = pointAt(position.px, position.py), overPoint = index >= 0;
+      if (hoverPointIndex !== index) { hoverPointIndex = index; drawGraph(); }
+      if (mode === 'add') { event.currentTarget.style.cursor = 'crosshair'; return; }
+      event.currentTarget.style.cursor = mode === 'delete' ? (overPoint ? deleteCursor : 'default') : 'grab';
+      return;
+    }
+    if (drag.pan) {
+      const dx = event.clientX - drag.startX;
+      const dy = event.clientY - drag.startY;
+      const curWidth = drag.startZoom.xMax - drag.startZoom.xMin;
+      const curHeight = drag.startZoom.yMax - drag.startZoom.yMin;
+      // We are dragging pixels, so if dx is positive (mouse moves right), we are viewing further left, so xMin decreases.
+      const shiftX = dx * curWidth / graphScale.width;
+      const shiftY = dy * curHeight / graphScale.height;
+      zoomState.xMin = drag.startZoom.xMin - shiftX;
+      zoomState.xMax = drag.startZoom.xMax - shiftX;
+      zoomState.yMin = drag.startZoom.yMin + shiftY;
+      zoomState.yMax = drag.startZoom.yMax + shiftY;
+      drawGraph();
+      return;
+    }
+    const position = graphPointerPosition(event, drag.scale), index = drag.index;
+    const minX = index === 0 ? masterMin : Math.max(masterMin, points[index - 1].x + .0001);
+    const maxX = index === points.length - 1 ? masterMax : Math.min(masterMax, points[index + 1].x - .0001);
+    points[index].x = Math.min(maxX, Math.max(minX, position.x));
+    points[index].y = position.y;
+    hoverPointIndex = index;
+    calculate();
+  }
+  function onGraphPointerUp(event) {
+    if (!drag) return;
+    const wasPan = drag.pan;
+    drag = null;
+    event.currentTarget.style.cursor = mode === 'add' ? 'crosshair' : mode === 'delete' ? deleteCursor : 'grab';
+    if (!wasPan) { renderPoints(); calculate(); }
+  }
+  function onGraphPointerLeave() { if (!drag && hoverPointIndex !== null) { hoverPointIndex = null; drawGraph(); } }
+  function removePoint(index) {
+    if (index >= 0) {
+      points.splice(index, 1);
+      hoverPointIndex = null;
+      renderPoints();
+      calculate();
+    }
+  }
+  function validPoints() { return points.every((p, i) => Number.isFinite(p.x) && Number.isFinite(p.y) && (!i || p.x > points[i - 1].x)); }
+  function setError(message = '') { document.getElementById('error').textContent = message; }
+  function normalized(x, a, b) { return (x - a.x) / (b.x - a.x); }
+  function profile(type, t) {
+    const u = Math.max(0, Math.min(1, t));
+    const p3 = 3*u*u - 2*u*u*u;
+    const p5 = 10*u**3 - 15*u**4 + 6*u**5;
+    const p7 = 35*u**4 - 84*u**5 + 70*u**6 - 20*u**7;
+    switch (type) {
+      case 'POLYNOM1': case 'NOTDEF': return u;
+      case 'POLYNOM3': case 'SPLINE': case 'SPLINE_NATURAL': case 'SPLINE_TANGENTIAL': case 'SPLINE_PERIODIC': case 'SPLINE_LINEAR': return p3;
+      case 'POLYNOM5': case 'POLYNOM5_MM': return p5;
+      case 'POLYNOM8': case 'POLYNOM7_MM': return p7;
+      case 'SINUSLINIE': return .5 * (1 - Math.cos(Math.PI*u));
+      case 'MODSINUSLINIE': return u - Math.sin(2*Math.PI*u) / (2*Math.PI);
+      case 'BESTEHORN': return p5 + .08 * Math.sin(2*Math.PI*u) * u * (1-u);
+      case 'SINUS_GERADE_KOMBI': return u - .12 * Math.sin(2*Math.PI*u);
+      case 'HARMONIC_KOMBI_RT': return 1 - Math.cos(Math.PI*u/2);
+      case 'HARMONIC_KOMBI_TR': return Math.sin(Math.PI*u/2);
+      case 'HARMONIC_KOMBI_VT': return u + Math.sin(Math.PI*u)/Math.PI;
+      case 'HARMONIC_KOMBI_TV': return u - Math.sin(Math.PI*u)/Math.PI;
+      case 'MODSINUSLINIE_VV': return u + .08*Math.sin(2*Math.PI*u);
+      case 'POLYNOM6STP': return u**3 * (10 - 15*u + 6*u*u);
+      case 'POLYNOM6WDP': return p5 + .04*Math.sin(4*Math.PI*u)*u*(1-u);
+      default: return p5;
+    }
+  }
+  function segmentPosition(index, x) {
+    const a = points[index], b = points[index + 1];
+    if (b.function.includes('SPLINE')) {
+      const h = b.x - a.x;
+      if (h <= 0.00001) return a.y;
+      const M0 = splineM[index] || 0, M1 = splineM[index+1] || 0;
+      const dx0 = x - a.x, dx1 = b.x - x;
+      return (M0 * dx1**3)/(6*h) + (M1 * dx0**3)/(6*h) + (a.y - M0*h**2/6)*(dx1/h) + (b.y - M1*h**2/6)*(dx0/h);
+    }
+    const t = normalized(x, a, b);
+    return a.y + (b.y - a.y) * profile(b.function, t);
+  }
+  function segmentSlope(index, x) {
+    const a = points[index], b = points[index + 1];
+    if (b.function.includes('SPLINE')) {
+      const h = b.x - a.x;
+      if (h <= 0.00001) return 0;
+      const M0 = splineM[index] || 0, M1 = splineM[index+1] || 0;
+      const dx0 = x - a.x, dx1 = b.x - x;
+      return -(M0 * dx1**2)/(2*h) + (M1 * dx0**2)/(2*h) - (a.y - M0*h**2/6)/h + (b.y - M1*h**2/6)/h;
+    }
+    const t = normalized(x, a, b), delta = .00001;
+    const derivative = t <= delta ? (profile(b.function, t + delta) - profile(b.function, t)) / delta
+      : t >= 1 - delta ? (profile(b.function, t) - profile(b.function, t - delta)) / delta
+      : (profile(b.function, t + delta) - profile(b.function, t - delta)) / (2 * delta);
+    return (b.y - a.y) / (b.x - a.x) * derivative;
+  }
+  function segmentAcceleration(index, x) {
+    const a = points[index], b = points[index + 1];
+    if (Math.abs(b.x - a.x) < 0.00001) return 0;
+    if (b.function.includes('SPLINE')) {
+      const h = b.x - a.x;
+      const M0 = splineM[index] || 0, M1 = splineM[index+1] || 0;
+      const dx0 = x - a.x, dx1 = b.x - x;
+      return (M0 * dx1)/h + (M1 * dx0)/h;
+    }
+    const t = normalized(x, a, b), delta = .001;
+    let d2 = 0;
+    if (t <= delta) d2 = (profile(b.function, t + 2*delta) - 2*profile(b.function, t + delta) + profile(b.function, t)) / (delta * delta);
+    else if (t >= 1 - delta) d2 = (profile(b.function, t) - 2*profile(b.function, t - delta) + profile(b.function, t - 2*delta)) / (delta * delta);
+    else d2 = (profile(b.function, t + delta) - 2*profile(b.function, t) + profile(b.function, t - delta)) / (delta * delta);
+    return (b.y - a.y) / Math.pow(b.x - a.x, 2) * d2;
+  }
+  function findSegment(master) { for (let i = 0; i < points.length - 1; i++) if (master <= points[i + 1].x) return i; return Math.max(0, points.length - 2); }
+  function getSlave(master) { if (!points.length) return 0; if (points.length === 1 || master <= points[0].x) return points[0].y; if (master >= points.at(-1).x) return points.at(-1).y; return segmentPosition(findSegment(master), master); }
+  function getSlope(master) { if (points.length <= 1) return 0; if (master <= points[0].x) return segmentSlope(0, points[0].x); if (master >= points.at(-1).x) return segmentSlope(points.length - 2, points.at(-1).x); return segmentSlope(findSegment(master), master); }
+  function getAcceleration(master) { if (points.length <= 1) return 0; if (master <= points[0].x) return segmentAcceleration(0, points[0].x); if (master >= points.at(-1).x) return segmentAcceleration(points.length - 2, points.at(-1).x); return segmentAcceleration(findSegment(master), master); }
+  let splineM = [];
+  function calculateSplines() {
+    splineM = new Array(points.length).fill(0);
+    let inBlock = false, startIdx = 0;
+    for (let i = 0; i < points.length - 1; i++) {
+      const isSpline = points[i+1].function.includes('SPLINE');
+      if (isSpline && !inBlock) { inBlock = true; startIdx = i; }
+      if (!isSpline && inBlock) { solveSplineBlock(startIdx, i); inBlock = false; }
+    }
+    if (inBlock) solveSplineBlock(startIdx, points.length - 1);
+  }
+  function solveSplineBlock(start, end) {
+    const n = end - start + 1;
+    if (n <= 2) { splineM[start] = 0; splineM[end] = 0; return; }
+    const h = [];
+    for (let i = 0; i < n - 1; i++) h.push(points[start + i + 1].x - points[start + i].x);
+    const a = [], b = [], c = [], d = [];
+    for (let i = 1; i < n - 1; i++) {
+      a[i] = h[i-1]; b[i] = 2 * (h[i-1] + h[i]); c[i] = h[i];
+      d[i] = 6 * ((points[start + i + 1].y - points[start + i].y) / h[i] - (points[start + i].y - points[start + i - 1].y) / h[i-1]);
+    }
+    const cp = [], dp = [];
+    cp[1] = c[1] / b[1]; dp[1] = d[1] / b[1];
+    for (let i = 2; i < n - 1; i++) {
+      const denom = b[i] - a[i] * cp[i-1];
+      cp[i] = c[i] / denom; dp[i] = (d[i] - a[i] * dp[i-1]) / denom;
+    }
+    splineM[start] = 0; splineM[end] = 0;
+    if (n > 2) {
+      splineM[start + n - 2] = dp[n - 2];
+      for (let i = n - 3; i >= 1; i--) splineM[start + i] = dp[i] - cp[i] * splineM[start + i + 1];
+    }
+  }
+
+  function calculate() {
+    if (!validPoints()) { setError('Her Master Position değeri bir önceki noktadan büyük olmalıdır.'); return; }
+    setError();
+    if (healSplines()) {
+      renderPoints();
+    }
+    calculateSplines();
+    drawGraph();
+    updatePosition();
+  }
+  function updatePosition() {
+    if (!validPoints()) return;
+    const master = Number(document.getElementById('masterInput').value); if (!Number.isFinite(master)) return;
+    if (!points.length) { document.getElementById('slaveOutput').textContent = '-'; document.getElementById('slopeOutput').textContent = '-'; document.getElementById('segmentInfo').textContent = 'Nokta bulunmuyor. Grafik Master ve Slave için 0–100 ölçeğindedir.'; return; }
+    document.getElementById('slaveOutput').textContent = getSlave(master).toFixed(2);
+    document.getElementById('slopeOutput').textContent = getSlope(master).toFixed(2);
+    if (points.length === 1) { document.getElementById('segmentInfo').textContent = 'Yalnızca sabit P1 mevcut; eğri oluşturmak için nokta ekleyin.'; return; }
+    const i = findSegment(master), a = points[i], b = points[i + 1];
+    document.getElementById('segmentInfo').textContent = `Aktif bölüm: P${i + 1} → P${i + 2} (${b.function}) | Master aralığı: ${a.x.toFixed(2)} – ${b.x.toFixed(2)}`;
+  }
+  function drawGraph() {
+    const canvas = document.getElementById('graph'), ctx = canvas.getContext('2d'), pad = 100, width = canvas.width - pad * 2, height = canvas.height - pad * 2;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const ys = points.length ? points.map(p => p.y) : [DEFAULT_SLAVE_MIN, DEFAULT_SLAVE_MAX];
+    let curveMin = Math.min(DEFAULT_SLAVE_MIN, ...ys);
+    let curveMax = Math.max(DEFAULT_SLAVE_MAX, ...ys);
+    
+    if (points.length > 1) {
+      for (let i = 0; i < points.length - 1; i++) {
+        const a = points[i], b = points[i + 1], steps = 60;
+        for (let j = 0; j <= steps; j++) {
+          const y = segmentPosition(i, a.x + (b.x - a.x) * j / steps);
+          if (y < curveMin) curveMin = y;
+          if (y > curveMax) curveMax = y;
+        }
+      }
+    }
+    const yRange = curveMax - curveMin;
+    const yPad = yRange === 0 ? 10 : yRange * 0.05;
+    
+    let xMin = masterMin, xMax = masterMax;
+    let yMin = curveMin - yPad, yMax = curveMax + yPad;
+    if (zoomState) { xMin = zoomState.xMin; xMax = zoomState.xMax; yMin = zoomState.yMin; yMax = zoomState.yMax; }
+    const sx = x => pad + (x - xMin) / (xMax - xMin) * width, sy = y => canvas.height - pad - (y - yMin) / (yMax - yMin) * height;
+    graphScale = { xMin, xMax, yMin, yMax, pad, width, height, sx, sy };
+    const formatScale = value => Number(value.toFixed(6)).toString();
+    ctx.strokeStyle = '#e5e5e5'; ctx.lineWidth = 1;
+    for (let i = 0; i <= 10; i++) {
+      const x = pad + width * i / 10, y = pad + height * i / 10;
+      ctx.beginPath(); ctx.moveTo(x,pad); ctx.lineTo(x,canvas.height-pad); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(canvas.width-pad,y); ctx.stroke();
+      ctx.fillStyle = '#52606d'; ctx.font = '11px Arial';
+      ctx.textAlign = 'center'; ctx.fillText(formatScale(xMin + (xMax-xMin) * i / 10), x, canvas.height - pad + 18);
+      ctx.textAlign = 'right'; ctx.fillText(formatScale(yMax - (yMax-yMin) * i / 10), pad - 9, y + 4);
+    }
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(pad, pad, width, height);
+    ctx.clip();
+    
+    if (0 >= xMin && 0 <= xMax) {
+      ctx.beginPath(); ctx.setLineDash([5, 5]); ctx.strokeStyle = '#008a1e'; ctx.lineWidth = 1;
+      ctx.moveTo(sx(0), pad); ctx.lineTo(sx(0), pad + height); ctx.stroke();
+    }
+    if (0 >= yMin && 0 <= yMax) {
+      ctx.beginPath(); ctx.setLineDash([5, 5]); ctx.strokeStyle = '#e30613'; ctx.lineWidth = 1;
+      ctx.moveTo(pad, sy(0)); ctx.lineTo(pad + width, sy(0)); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    
+    ctx.textAlign = 'left';
+    points.slice(0, -1).forEach((a, index) => { const b = points[index + 1], type = b.function, steps = 120;
+      ctx.beginPath(); ctx.strokeStyle='#0078d4'; ctx.lineWidth=3;
+      for (let i=0;i<=steps;i++) { const x = a.x + (b.x-a.x)*i/steps, y=segmentPosition(index,x); i ? ctx.lineTo(sx(x),sy(y)) : ctx.moveTo(sx(x),sy(y)); } ctx.stroke();
+    });
+    points.forEach((p,i) => { ctx.fillStyle='#e74c3c'; ctx.beginPath(); ctx.arc(sx(p.x),sy(p.y),4,0,2*Math.PI); ctx.fill(); if (i === hoverPointIndex) { ctx.fillStyle='#111'; ctx.font='12px Arial'; ctx.fillText(`P${i+1} (${p.x.toFixed(2)}, ${p.y.toFixed(2)})`,sx(p.x)+9,sy(p.y)-9); } });
+    
+    ctx.restore();
+    ctx.fillStyle='#111'; ctx.font='14px Arial'; ctx.textAlign='center';
+    ctx.fillText('Master Position', canvas.width/2, canvas.height-20);
+    ctx.save(); ctx.translate(18, canvas.height/2); ctx.rotate(-Math.PI/2); ctx.fillText('Slave Position', 0, 0); ctx.restore();
+    if (document.getElementById('velocityWrapper').style.display !== 'none') drawVelocity();
+    if (document.getElementById('accelerationWrapper').style.display !== 'none') drawAcceleration();
+  }
+  function toggleVelocity() {
+    const w = document.getElementById('velocityWrapper');
+    const cb = document.getElementById('velocityToggleCheckbox');
+    w.style.display = cb && cb.checked ? 'block' : 'none';
+    if (cb && cb.checked) drawVelocity();
+  }
+  function drawVelocity() {
+    const wrapper = document.getElementById('velocityWrapper');
+    if (wrapper.style.display === 'none') return;
+    const canvas = document.getElementById('velocityGraph'), ctx = canvas.getContext('2d'), pad = 100, width = canvas.width - pad * 2, height = canvas.height - pad * 2;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    let xMin = masterMin, xMax = masterMax;
+    if (zoomState) { xMin = zoomState.xMin; xMax = zoomState.xMax; }
+    
+    let minV = 0, maxV = 0, hasV = false;
+    const steps = 300, stepSize = (xMax - xMin) / steps;
+    for (let i = 0; i <= steps; i++) {
+       const x = xMin + i * stepSize;
+       const v = getSlope(x);
+       if (!Number.isNaN(v)) {
+         if (!hasV) { minV = maxV = v; hasV = true; }
+         else { if (v < minV) minV = v; if (v > maxV) maxV = v; }
+       }
+    }
+    if (!hasV) { minV = -1; maxV = 1; }
+    if (minV === maxV) { minV -= 1; maxV += 1; }
+    const vRange = maxV - minV, yMin = minV - vRange * 0.1, yMax = maxV + vRange * 0.1;
+    
+    const sx = x => pad + (x - xMin) / (xMax - xMin) * width, sy = y => canvas.height - pad - (y - yMin) / (yMax - yMin) * height;
+    const formatScale = value => Number(value.toFixed(6)).toString();
+    
+    ctx.strokeStyle = '#e5e5e5'; ctx.lineWidth = 1;
+    for (let i = 0; i <= 10; i++) {
+      const x = pad + width * i / 10, y = pad + height * i / 10;
+      ctx.beginPath(); ctx.moveTo(x,pad); ctx.lineTo(x,canvas.height-pad); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(canvas.width-pad,y); ctx.stroke();
+      ctx.fillStyle = '#52606d'; ctx.font = '11px Arial';
+      ctx.textAlign = 'center'; ctx.fillText(formatScale(xMin + (xMax-xMin) * i / 10), x, canvas.height - pad + 18);
+      ctx.textAlign = 'right'; ctx.fillText(formatScale(yMax - (yMax-yMin) * i / 10), pad - 9, y + 4);
+    }
+    
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(pad, pad, width, height);
+    ctx.clip();
+    
+    if (0 >= xMin && 0 <= xMax) {
+      ctx.beginPath(); ctx.setLineDash([5, 5]); ctx.strokeStyle = '#008a1e'; ctx.lineWidth = 1;
+      ctx.moveTo(sx(0), pad); ctx.lineTo(sx(0), pad + height); ctx.stroke();
+    }
+    if (0 >= yMin && 0 <= yMax) {
+      ctx.beginPath(); ctx.setLineDash([5, 5]); ctx.strokeStyle = '#e30613'; ctx.lineWidth = 1;
+      ctx.moveTo(pad, sy(0)); ctx.lineTo(pad + width, sy(0)); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    
+    ctx.textAlign = 'left';
+    points.slice(0, -1).forEach((a, index) => { const b = points[index + 1], steps = 120;
+      ctx.beginPath(); ctx.strokeStyle='#28a745'; ctx.lineWidth=3;
+      for (let i=0;i<=steps;i++) { const x = a.x + (b.x-a.x)*i/steps, y=segmentSlope(index,x); i ? ctx.lineTo(sx(x),sy(y)) : ctx.moveTo(sx(x),sy(y)); } ctx.stroke();
+    });
+    points.forEach((p,i) => { const v = getSlope(p.x); ctx.fillStyle='#e74c3c'; ctx.beginPath(); ctx.arc(sx(p.x),sy(v),4,0,2*Math.PI); ctx.fill(); if (i === hoverPointIndex) { ctx.fillStyle='#111'; ctx.font='12px Arial'; ctx.fillText(`P${i+1} (${p.x.toFixed(2)}, ${Number(v.toFixed(6)).toString()})`,sx(p.x)+9,sy(v)-9); } });
+    
+    ctx.restore();
+    ctx.fillStyle='#111'; ctx.font='14px Arial'; ctx.textAlign='center';
+    ctx.fillText('Master Position', canvas.width/2, canvas.height-20);
+    ctx.save(); ctx.translate(18, canvas.height/2); ctx.rotate(-Math.PI/2); ctx.fillText('Velocity', 0, 0); ctx.restore();
+  }
+  function toggleAcceleration() {
+    const w = document.getElementById('accelerationWrapper');
+    const cb = document.getElementById('accelerationToggleCheckbox');
+    if (cb && cb.checked) {
+      const cbVel = document.getElementById('velocityToggleCheckbox');
+      if (cbVel && !cbVel.checked) { cbVel.checked = true; toggleVelocity(); }
+    }
+    w.style.display = cb && cb.checked ? 'block' : 'none';
+    if (cb && cb.checked) drawAcceleration();
+  }
+  function drawAcceleration() {
+    const wrapper = document.getElementById('accelerationWrapper');
+    if (wrapper.style.display === 'none') return;
+    const canvas = document.getElementById('accelerationGraph'), ctx = canvas.getContext('2d'), pad = 100, width = canvas.width - pad * 2, height = canvas.height - pad * 2;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    let xMin = masterMin, xMax = masterMax;
+    if (zoomState) { xMin = zoomState.xMin; xMax = zoomState.xMax; }
+    
+    let minA = 0, maxA = 0, hasA = false;
+    const steps = 300, stepSize = (xMax - xMin) / steps;
+    for (let i = 0; i <= steps; i++) {
+       const x = xMin + i * stepSize;
+       const a = getAcceleration(x);
+       if (!Number.isNaN(a)) {
+         if (!hasA) { minA = maxA = a; hasA = true; }
+         else { if (a < minA) minA = a; if (a > maxA) maxA = a; }
+       }
+    }
+    if (!hasA) { minA = -1; maxA = 1; }
+    if (minA === maxA) { minA -= 1; maxA += 1; }
+    const aRange = maxA - minA, yMin = minA - aRange * 0.1, yMax = maxA + aRange * 0.1;
+    
+    const sx = x => pad + (x - xMin) / (xMax - xMin) * width, sy = y => canvas.height - pad - (y - yMin) / (yMax - yMin) * height;
+    const formatScale = value => Number(value.toFixed(6)).toString();
+    
+    ctx.strokeStyle = '#e5e5e5'; ctx.lineWidth = 1;
+    for (let i = 0; i <= 10; i++) {
+      const x = pad + width * i / 10, y = pad + height * i / 10;
+      ctx.beginPath(); ctx.moveTo(x,pad); ctx.lineTo(x,canvas.height-pad); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(canvas.width-pad,y); ctx.stroke();
+      ctx.fillStyle = '#52606d'; ctx.font = '11px Arial';
+      ctx.textAlign = 'center'; ctx.fillText(formatScale(xMin + (xMax-xMin) * i / 10), x, canvas.height - pad + 18);
+      ctx.textAlign = 'right'; ctx.fillText(formatScale(yMax - (yMax-yMin) * i / 10), pad - 9, y + 4);
+    }
+    
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(pad, pad, width, height);
+    ctx.clip();
+    
+    if (0 >= xMin && 0 <= xMax) {
+      ctx.beginPath(); ctx.setLineDash([5, 5]); ctx.strokeStyle = '#008a1e'; ctx.lineWidth = 1;
+      ctx.moveTo(sx(0), pad); ctx.lineTo(sx(0), pad + height); ctx.stroke();
+    }
+    if (0 >= yMin && 0 <= yMax) {
+      ctx.beginPath(); ctx.setLineDash([5, 5]); ctx.strokeStyle = '#e30613'; ctx.lineWidth = 1;
+      ctx.moveTo(pad, sy(0)); ctx.lineTo(pad + width, sy(0)); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    
+    ctx.textAlign = 'left';
+    points.slice(0, -1).forEach((p1, index) => { const p2 = points[index + 1], segSteps = 120;
+      ctx.beginPath(); ctx.strokeStyle='#e67e22'; ctx.lineWidth=3;
+      for (let i=0;i<=segSteps;i++) { const x = p1.x + (p2.x-p1.x)*i/segSteps, y=segmentAcceleration(index,x); i ? ctx.lineTo(sx(x),sy(y)) : ctx.moveTo(sx(x),sy(y)); } ctx.stroke();
+    });
+    points.forEach((p,i) => { const a = getAcceleration(p.x); ctx.fillStyle='#e74c3c'; ctx.beginPath(); ctx.arc(sx(p.x),sy(a),4,0,2*Math.PI); ctx.fill(); if (i === hoverPointIndex) { ctx.fillStyle='#111'; ctx.font='12px Arial'; ctx.fillText(`P${i+1} (${p.x.toFixed(2)}, ${Number(a.toFixed(6)).toString()})`,sx(p.x)+9,sy(a)-9); } });
+    
+    ctx.restore();
+    ctx.fillStyle='#111'; ctx.font='14px Arial'; ctx.textAlign='center';
+    ctx.fillText('Master Position', canvas.width/2, canvas.height-20);
+    ctx.save(); ctx.translate(18, canvas.height/2); ctx.rotate(-Math.PI/2); ctx.fillText('Acceleration', 0, 0); ctx.restore();
+  }
+  
+  let isGraphFocused = false;
+  
+  function onGraphWheel(event) {
+    if (!isGraphFocused) return; // Do not prevent default, allow page scroll
+    event.preventDefault();
+    if (!graphScale) return;
+    const rect = graph.getBoundingClientRect();
+    const px = (event.clientX - rect.left) * graph.width / rect.width;
+    const py = (event.clientY - rect.top) * graph.height / rect.height;
+    
+    if (px < graphScale.pad || px > graphScale.pad + graphScale.width || py < graphScale.pad || py > graphScale.pad + graphScale.height) return;
+
+    const curWidth = graphScale.xMax - graphScale.xMin;
+    const curHeight = graphScale.yMax - graphScale.yMin;
+    const mouseX = graphScale.xMin + (px - graphScale.pad) / graphScale.width * curWidth;
+    const mouseY = graphScale.yMax - (py - graphScale.pad) / graphScale.height * curHeight;
+
+    const zoomFactor = event.deltaY > 0 ? 1.15 : 0.85;
+    const newWidth = curWidth * zoomFactor;
+    const newHeight = curHeight * zoomFactor;
+    
+    const fracX = (mouseX - graphScale.xMin) / curWidth;
+    const fracY = (mouseY - graphScale.yMin) / curHeight;
+    
+    zoomState = {
+      xMin: mouseX - fracX * newWidth,
+      xMax: mouseX + (1 - fracX) * newWidth,
+      yMin: mouseY - fracY * newHeight,
+      yMax: mouseY + (1 - fracY) * newHeight
+    };
+    drawGraph();
+  }
+  const graph = document.getElementById('graph');
+  graph.addEventListener('wheel', onGraphWheel, { passive: false });
+  graph.addEventListener('pointerdown', onGraphPointerDown);
+  graph.addEventListener('pointermove', onGraphPointerMove);
+  graph.addEventListener('pointerup', onGraphPointerUp);
+  graph.addEventListener('pointercancel', onGraphPointerUp);
+  graph.addEventListener('pointerleave', onGraphPointerLeave);
+  
+  document.addEventListener('pointerdown', (e) => {
+    const isCanvas = e.target.tagName === 'CANVAS';
+    const isToolbar = e.target.closest('.graph-tools') || e.target.closest('.graph-tools-right');
+    
+    if (isCanvas) {
+      isGraphFocused = true;
+    } else {
+      isGraphFocused = false;
+      
+      if (!isToolbar && mode !== null) {
+        setMode(null);
+      }
+    }
+  });
+
+  renderPoints(); calculate(); setMode(null);
+</script>
+</body>
+</html>
