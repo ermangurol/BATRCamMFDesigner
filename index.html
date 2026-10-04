@@ -38,7 +38,7 @@
     .result { margin-top:14px; padding:16px; background:#f7f9fc; border:1px solid var(--line); border-radius:5px; } .result input { width:150px; } .value { font-weight:700; margin-left:10px; }
     .segment { margin-top:14px; padding:10px; border-radius:3px; background:#e5ebf1; font-size:13px; }
   
-    .header-top { display: flex; justify-content: space-between; align-items: center; background-color: #ef0000; padding: 12px 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .header-top { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to right, #ff3333, #8b0000); padding: 12px 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
     .header-top h2 { margin: 0; color: #fff; }
     .lang-switch { font-size: 14px; font-weight: bold; color: #fff; display: flex; gap: 8px; align-items: center; }
     .lang-switch span { cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: background 0.2s; display: flex; align-items: center; gap: 6px; }
@@ -52,7 +52,10 @@
 <body>
   <div id="toast"></div>
   <div class="header-top">
-      <h2>Beckhoff Motion Function Designer</h2>
+      <h2 style="display:flex; align-items:center; gap:12px;">
+        <img src="logo.png" alt="Logo" style="height: 38px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));">
+        Beckhoff Motion Function Designer
+      </h2>
       <div class="lang-switch">
         <span onclick="setLanguage('tr')" id="lang-tr"><img src="https://flagcdn.com/w20/tr.png" width="20" alt="TR"> TR</span>
         <span onclick="setLanguage('en')" id="lang-en" class="active"><img src="https://flagcdn.com/w20/gb.png" width="20" alt="ENG"> ENG</span>
