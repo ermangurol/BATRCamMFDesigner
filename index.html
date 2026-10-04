@@ -904,10 +904,6 @@
   function toggleAcceleration() {
     const w = document.getElementById('accelerationWrapper');
     const cb = document.getElementById('accelerationToggleCheckbox');
-    if (cb && cb.checked) {
-      const cbVel = document.getElementById('velocityToggleCheckbox');
-      if (cbVel && !cbVel.checked) { cbVel.checked = true; toggleVelocity(); }
-    }
     w.style.display = cb && cb.checked ? 'block' : 'none';
     if (cb && cb.checked) drawAcceleration();
   }
