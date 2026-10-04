@@ -311,7 +311,7 @@
     if (points.length >= MAX_POINTS) return;
     const last = points.at(-1), beforeLast = points.at(-2);
     const step = beforeLast ? Math.max(1, last.x - beforeLast.x) : 50;
-    const newFunc = last ? last.function : 'POLYNOM1';
+    const newFunc = (last && last.function) ? last.function : 'POLYNOM1';
     points.push({ x: last.x + step, y: last.y, function: newFunc });
     renderPoints(); calculate();
   }
@@ -558,8 +558,8 @@
     if ((left && position.x - left.x < .0001) || (right && right.x - position.x < .0001)) { setError(getI18n('errMasterSame')); return; }
     
     let newFunc = 'POLYNOM1';
-    if (insertAt < points.length && points[insertAt]) newFunc = points[insertAt].function;
-    else if (points.length > 0) newFunc = points.at(-1).function;
+    if (insertAt < points.length && points[insertAt] && points[insertAt].function) newFunc = points[insertAt].function;
+    else if (points.length > 0 && points.at(-1).function) newFunc = points.at(-1).function;
     
     points.splice(insertAt, 0, { x: position.x, y: position.y, function: newFunc });
     renderPoints(); calculate();
@@ -661,7 +661,8 @@
   }
   function segmentPosition(index, x) {
     const a = points[index], b = points[index + 1];
-    if (b.function.includes('SPLINE')) {
+    const func = b.function || 'POLYNOM1';
+      if (func.includes('SPLINE')) {
       const h = b.x - a.x;
       if (h <= 0.00001) return a.y;
       const M0 = splineM[index] || 0, M1 = splineM[index+1] || 0;
@@ -669,11 +670,12 @@
       return (M0 * dx1**3)/(6*h) + (M1 * dx0**3)/(6*h) + (a.y - M0*h**2/6)*(dx1/h) + (b.y - M1*h**2/6)*(dx0/h);
     }
     const t = normalized(x, a, b);
-    return a.y + (b.y - a.y) * profile(b.function, t);
+    return a.y + (b.y - a.y) * profile(func, t);
   }
   function segmentSlope(index, x) {
     const a = points[index], b = points[index + 1];
-    if (b.function.includes('SPLINE')) {
+    const func = b.function || 'POLYNOM1';
+      if (func.includes('SPLINE')) {
       const h = b.x - a.x;
       if (h <= 0.00001) return 0;
       const M0 = splineM[index] || 0, M1 = splineM[index+1] || 0;
@@ -689,7 +691,8 @@
   function segmentAcceleration(index, x) {
     const a = points[index], b = points[index + 1];
     if (Math.abs(b.x - a.x) < 0.00001) return 0;
-    if (b.function.includes('SPLINE')) {
+    const func = b.function || 'POLYNOM1';
+      if (func.includes('SPLINE')) {
       const h = b.x - a.x;
       const M0 = splineM[index] || 0, M1 = splineM[index+1] || 0;
       const dx0 = x - a.x, dx1 = b.x - x;
@@ -711,7 +714,7 @@
     splineM = new Array(points.length).fill(0);
     let inBlock = false, startIdx = 0;
     for (let i = 0; i < points.length - 1; i++) {
-      const isSpline = points[i+1].function.includes('SPLINE');
+      const isSpline = (points[i+1].function || '').includes('SPLINE');
       if (isSpline && !inBlock) { inBlock = true; startIdx = i; }
       if (!isSpline && inBlock) { solveSplineBlock(startIdx, i); inBlock = false; }
     }
