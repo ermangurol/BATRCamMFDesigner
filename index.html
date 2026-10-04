@@ -36,41 +36,60 @@
     canvas { display:block; width:100%; height:520px; margin-top:14px; border:1px solid var(--line); border-radius:4px; background:#fff; touch-action:none; }
     .result { margin-top:14px; padding:16px; background:#f7f9fc; border:1px solid var(--line); border-radius:5px; } .result input { width:150px; } .value { font-weight:700; margin-left:10px; }
     .segment { margin-top:14px; padding:10px; border-radius:3px; background:#e5ebf1; font-size:13px; }
-  </style>
+  
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .header-top h2 { margin: 0; }
+    .lang-switch { font-size: 14px; font-weight: bold; color: #30475b; display: flex; gap: 8px; align-items: center; }
+    .lang-switch span { cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: background 0.2s; display: flex; align-items: center; gap: 6px; }
+    .lang-switch span img { display: block; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+    .lang-switch span:hover { background: #eaf0f6; }
+    .lang-switch span.active { color: #fff; background: #064bc7; }
+    #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 4px; padding: 12px 16px; position: fixed; z-index: 1000; left: 50%; transform: translateX(-50%); top: 20px; font-size: 14px; opacity: 0; transition: opacity 0.3s, visibility 0.3s; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+    #toast.show { visibility: visible; opacity: 1; }
+</style>
 </head>
 <body>
+  <div id="toast"></div>
   <div class="container">
-    <h2>Beckhoff Motion Function Designer</h2>
+    
+    <div class="header-top">
+      <h2>Beckhoff Motion Function Designer</h2>
+      <div class="lang-switch">
+        <span onclick="setLanguage('tr')" id="lang-tr"><img src="https://flagcdn.com/w20/tr.png" width="20" alt="TR"> TR</span>
+        <span onclick="setLanguage('en')" id="lang-en" class="active"><img src="https://flagcdn.com/w20/gb.png" width="20" alt="ENG"> ENG ✓</span>
+      </div>
+    </div>
+
     <div class="toolbar">
-      <label class="table-id">Table ID <input id="tableId" type="number" min="0" step="1" value="1" onchange="updateTableId(this.value)"></label>
-      <button class="csv-action" type="button" title="Export as CSV" onclick="exportCsv()">↓ CSV Download</button>
-      <button class="csv-action" type="button" title="Import from CSV file" onclick="document.getElementById('csvFile').click()">↑ CSV Upload</button>
+      <label class="table-id"><span data-i18n="tableId">Table ID</span> <input id="tableId" type="number" min="0" step="1" value="1" onchange="updateTableId(this.value)"></label>
+      <button class="csv-action" type="button" data-i18n-title="csvDownloadTitle" title="Export as CSV" onclick="exportCsv()" data-i18n="csvDownload">↓ CSV Download</button>
+      <button class="csv-action" type="button" data-i18n-title="csvUploadTitle" title="Import from CSV file" onclick="document.getElementById('csvFile').click()" data-i18n="csvUpload">↑ CSV Upload</button>
       <input id="csvFile" type="file" accept=".csv,text/csv" hidden onchange="importCsv(this.files[0]); this.value=''">
       <span id="modeStatus" class="hint">Drag mode: Hover over a point on the graph and drag it.</span>
       <fieldset class="master-settings">
-        <legend>Master Scale</legend>
-        <label for="masterMin">Minimum:</label><input id="masterMin" type="number" value="0" oninput="updateMasterRange()">
-        <label for="masterMax">Maximum:</label><input id="masterMax" type="number" value="700" oninput="updateMasterRange()">
-        <label for="periodic" class="periodic-row">Periodic <select id="periodic" onchange="setPeriodic(this.value === 'true')"><option value="true">True</option><option value="false" selected>False</option></select></label>
+        <legend data-i18n="masterScale">Master Scale</legend>
+        <label for="masterMin" data-i18n="min">Minimum:</label><input id="masterMin" type="number" value="0" oninput="updateMasterRange()">
+        <label for="masterMax" data-i18n="max">Maximum:</label><input id="masterMax" type="number" value="700" oninput="updateMasterRange()">
+        <label for="periodic" class="periodic-row"><span data-i18n="periodic">Periodic</span> <select id="periodic" onchange="setPeriodic(this.value === 'true')"><option value="true" data-i18n="trueVal">True</option><option value="false" selected data-i18n="falseVal">False</option></select></label>
       </fieldset>
     </div>
     <div id="error" class="error" role="alert"></div>
     <div class="points">
-      <div class="point-header"><span>Point</span><span>Master Position</span><span>Slave Position</span><span>Function from Previous Point</span><span>Action</span></div>
+      <div class="point-header"><span data-i18n="point">Point</span><span data-i18n="masterPos">Master Position</span><span data-i18n="slavePos">Slave Position</span><span data-i18n="functionPrev">Function from Previous Point</span><span data-i18n="action">Action</span></div>
       <div id="pointsRows"></div>
     </div>
     <div style="position:relative; margin-top:14px;">
       <div class="graph-tools">
-        <button id="enableInsert" class="icon" type="button" title="Toggle add point mode" aria-label="Toggle add point mode" onclick="setMode('add')">+</button>
-        <button id="enableDelete" class="icon delete" type="button" title="Toggle delete point mode" aria-label="Toggle delete point mode" onclick="setMode('delete')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
-        <button id="disableMode" class="icon stop" type="button" title="Drag and Pan Mode" aria-label="Drag and Pan Mode" onclick="setMode(null)">
+        <button id="enableInsert" class="icon" type="button" data-i18n-title="toggleAddMode" title="Toggle add point mode" data-i18n-aria="toggleAddMode" aria-label="Toggle add point mode" onclick="setMode('add')">+</button>
+        <button id="enableDelete" class="icon delete" type="button" data-i18n-title="toggleDeleteMode" title="Toggle delete point mode" data-i18n-aria="toggleDeleteMode" aria-label="Toggle delete point mode" onclick="setMode('delete')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
+        <button id="disableMode" class="icon stop" type="button" data-i18n-title="dragMode" title="Drag and Pan Mode" data-i18n-aria="dragMode" aria-label="Drag and Pan Mode" onclick="setMode(null)">
           <svg viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
         </button>
-        <label class="velocity-toggle" title="Toggle Velocity Graph"><input type="checkbox" id="velocityToggleCheckbox" onchange="toggleVelocity()"> 📈 Velocity Graph</label>
-        <label class="velocity-toggle" title="Toggle Acceleration Graph"><input type="checkbox" id="accelerationToggleCheckbox" onchange="toggleAcceleration()"> 📈 Acceleration Graph</label>
+        <label class="velocity-toggle" data-i18n-title="toggleVelocity" title="Toggle Velocity Graph"><input type="checkbox" id="velocityToggleCheckbox" onchange="toggleVelocity()"> <span data-i18n="velocityGraphBtn">📈 Velocity Graph</span></label>
+        <label class="velocity-toggle" data-i18n-title="toggleAccel" title="Toggle Acceleration Graph"><input type="checkbox" id="accelerationToggleCheckbox" onchange="toggleAcceleration()"> <span data-i18n="accelGraphBtn">📈 Acceleration Graph</span></label>
       </div>
       <div class="graph-tools-right">
-        <button class="zoom-max-btn" type="button" title="Zoom Max (Reset View)" onclick="resetZoom()">🔍 Zoom Max</button>
+        <button class="zoom-max-btn" type="button" data-i18n-title="zoomMaxTitle" title="Zoom Max (Reset View)" onclick="resetZoom()"><span data-i18n="zoomMax">🔍 Zoom Max</span></button>
       </div>
       <canvas id="graph" width="1500" height="520" style="margin-top:0;"></canvas>
     </div>
@@ -81,13 +100,118 @@
       <canvas id="accelerationGraph" width="1500" height="520" style="display:block; width:100%; border:1px solid var(--line); border-radius:4px; background:#fff; margin-top:0; touch-action:none;"></canvas>
     </div>
     <div class="result">
-      <b>Master Position:</b> <input id="masterInput" type="number" value="25" oninput="updatePosition()">
-      <br><br><b>Slave Position:</b><span id="slaveOutput" class="value">-</span>
-      <br><br><b>Slave / Master Slope:</b><span id="slopeOutput" class="value">-</span>
+      <b data-i18n="masterPosLabel">Master Position:</b> <input id="masterInput" type="number" value="25" oninput="updatePosition()">
+      <br><br><b data-i18n="slavePosLabel">Slave Position:</b><span id="slaveOutput" class="value">-</span>
+      <br><br><b data-i18n="slopeLabel">Slave / Master Slope:</b><span id="slopeOutput" class="value">-</span>
       <div id="segmentInfo" class="segment">-</div>
     </div>
   </div>
 <script>
+  
+  const i18n = {
+    en: {
+      tableId: "Table ID", csvDownloadTitle: "Export as CSV", csvDownload: "↓ CSV Download", csvUploadTitle: "Import from CSV file", csvUpload: "↑ CSV Upload",
+      masterScale: "Master Scale", min: "Minimum:", max: "Maximum:", periodic: "Periodic", trueVal: "True", falseVal: "False",
+      point: "Point", masterPos: "Master Position", slavePos: "Slave Position", functionPrev: "Function from Previous Point", action: "Action",
+      toggleAddMode: "Toggle add point mode", toggleDeleteMode: "Toggle delete point mode", dragMode: "Drag and Pan Mode",
+      toggleVelocity: "Toggle Velocity Graph", toggleAccel: "Toggle Acceleration Graph", velocityGraphBtn: "📈 Velocity Graph", accelGraphBtn: "📈 Acceleration Graph",
+      zoomMaxTitle: "Zoom Max (Reset View)", zoomMax: "🔍 Zoom Max", masterPosLabel: "Master Position:", slavePosLabel: "Slave Position:", slopeLabel: "Slave / Master Slope:",
+      startFixed: "START (fixed)",
+      modeAdd: "Add mode active: Click anywhere on the graph area to insert a point.",
+      modeDel: "Delete mode active: Click on a point to delete it.",
+      modeDrag: "Drag mode: Hover over a point on the graph and drag it.",
+      errTableId: "Table ID must be an integer zero or greater.",
+      errMasterRange: "Master Minimum must be less than Maximum.",
+      errMasterBounds: "Existing points fall outside the new Master range. Move the points into this range first.",
+      errMasterGreater: "Each Master Position value must be greater than the previous point.",
+      errMasterSame: "The new point cannot have the same Master Position value as an existing point.",
+      errCsvNoData: "No data found in the CSV file.",
+      errCsvInvalidRow: "Invalid Master/Slave value at row",
+      errCsvNoValidData: "No valid point data found.",
+      errCsvDuplicate: "There are points with the same Master Position value ({0}). Master values must be unique.",
+      errCsvMax: "Maximum {0} points can be loaded. The file contains {1} points.",
+      csvSuccess: "CSV successfully imported ({0} points).",
+      csvFail: "Failed to import CSV:",
+      csvReadErr: "An error occurred while reading the file.",
+      noPoints: "No points available. Graph uses 0-100 scale for Master and Slave.",
+      onlyP1: "Only stationary P1 exists; add points to create a curve.",
+      activeSeg: "Active segment: P{0} → P{1} ({2}) | Master range: {3} – {4}",
+      splineHealHole: "Warning: Cannot insert a polynomial inside a spline block. Spline integrity restored.",
+      splineHealBounds: "Warning: Boundary condition automatically applied to complete the spline block.",
+      graphMaster: "Master Position", graphSlave: "Slave Position", graphVel: "Velocity", graphAcc: "Acceleration"
+    },
+    tr: {
+      tableId: "Tablo ID", csvDownloadTitle: "CSV olarak dışa aktar", csvDownload: "↓ CSV İndir", csvUploadTitle: "CSV dosyasından içe aktar", csvUpload: "↑ CSV Yükle",
+      masterScale: "Master Ölçeği", min: "Minimum:", max: "Maksimum:", periodic: "Periyodik", trueVal: "True", falseVal: "False",
+      point: "Nokta", masterPos: "Master Pozisyonu", slavePos: "Slave Pozisyonu", functionPrev: "Önceki Noktadan Fonksiyon", action: "İşlem",
+      toggleAddMode: "Nokta ekleme modunu aç", toggleDeleteMode: "Nokta silme modunu aç", dragMode: "Taşıma ve Kaydırma Modu",
+      toggleVelocity: "Hız Grafiğini aç/kapat", toggleAccel: "İvme Grafiğini aç/kapat", velocityGraphBtn: "📈 Hız Grafiği", accelGraphBtn: "📈 İvme Grafiği",
+      zoomMaxTitle: "Görünümü Sıfırla", zoomMax: "🔍 Yakınlaştırmayı Sıfırla", masterPosLabel: "Master Pozisyonu:", slavePosLabel: "Slave Pozisyonu:", slopeLabel: "Eğim (Slave/Master):",
+      startFixed: "BAŞLANGIÇ (sabit)",
+      modeAdd: "Ekleme modu: Grafik alanında istediğiniz konuma tıklayarak nokta ekleyin.",
+      modeDel: "Silme modu: Silmek istediğiniz noktaya tıklayın.",
+      modeDrag: "Taşıma modu: Noktaları sürükleyin veya alanı kaydırın.",
+      errTableId: "Tablo ID sıfır veya daha büyük bir tam sayı olmalıdır.",
+      errMasterRange: "Master Minimum değeri, Maksimum değerinden küçük olmalıdır.",
+      errMasterBounds: "Mevcut noktalar yeni Master aralığının dışında. Önce noktaları aralığa taşıyın.",
+      errMasterGreater: "Her Master Pozisyonu bir öncekinden büyük olmalıdır.",
+      errMasterSame: "Yeni nokta, mevcut bir noktayla aynı Master Pozisyonuna sahip olamaz.",
+      errCsvNoData: "CSV dosyasında veri bulunamadı.",
+      errCsvInvalidRow: "Geçersiz Master/Slave değeri, satır",
+      errCsvNoValidData: "Geçerli nokta verisi bulunamadı.",
+      errCsvDuplicate: "Aynı Master Pozisyonuna sahip noktalar var ({0}). Değerler tekil olmalıdır.",
+      errCsvMax: "En fazla {0} nokta yüklenebilir. Dosyada {1} nokta var.",
+      csvSuccess: "CSV başarıyla yüklendi ({0} nokta).",
+      csvFail: "CSV yüklenemedi:",
+      csvReadErr: "Dosya okunurken hata oluştu.",
+      noPoints: "Nokta yok. Grafik 0-100 ölçeğindedir.",
+      onlyP1: "Sadece sabit P1 var; eğri için nokta ekleyin.",
+      activeSeg: "Aktif bölüm: P{0} → P{1} ({2}) | Master aralığı: {3} – {4}",
+      splineHealHole: "Uyarı: Spline bloğunun içine polinom eklenemez. İşlem geri alındı.",
+      splineHealBounds: "Uyarı: Spline eğrisini tamamlamak için sınır koşulu otomatik atandı.",
+      graphMaster: "Master Pozisyonu", graphSlave: "Slave Pozisyonu", graphVel: "Hız", graphAcc: "İvme"
+    }
+  };
+  let currentLang = 'en';
+
+  function setLanguage(lang) {
+    currentLang = lang;
+    document.getElementById('lang-tr').className = lang === 'tr' ? 'active' : '';
+    document.getElementById('lang-tr').innerHTML = lang === 'tr' ? '<img src="https://flagcdn.com/w20/tr.png" width="20" alt="TR"> TR ✓' : '<img src="https://flagcdn.com/w20/tr.png" width="20" alt="TR"> TR';
+    document.getElementById('lang-en').className = lang === 'en' ? 'active' : '';
+    document.getElementById('lang-en').innerHTML = lang === 'en' ? '<img src="https://flagcdn.com/w20/gb.png" width="20" alt="ENG"> ENG ✓' : '<img src="https://flagcdn.com/w20/gb.png" width="20" alt="ENG"> ENG';
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      el.innerHTML = i18n[lang][el.getAttribute('data-i18n')] || el.innerHTML;
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+      el.title = i18n[lang][el.getAttribute('data-i18n-title')] || el.title;
+    });
+    document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+      el.setAttribute('aria-label', i18n[lang][el.getAttribute('data-i18n-aria')] || el.getAttribute('aria-label'));
+    });
+    
+    setMode(mode);
+    renderPoints();
+    updatePosition();
+    drawGraph();
+  }
+
+  function getI18n(key, ...args) {
+    let str = i18n[currentLang][key] || key;
+    args.forEach((arg, i) => { str = str.replace('{'+i+'}', arg); });
+    return str;
+  }
+
+  let toastTimeout;
+  function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = 'show';
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 3500);
+  }
+
   const MAX_POINTS = 1000;
   const DEFAULT_SLAVE_MIN = 0, DEFAULT_SLAVE_MAX = 100;
   let tableId = 1, masterMin = 0, masterMax = 700, periodic = false, hoverPointIndex = null;
@@ -121,7 +245,7 @@
         <div class="field"><input aria-label="P${index + 1} Master Position" type="number" step="0.01" min="${masterMin}" max="${masterMax}" value="${point.x.toFixed(2)}" oninput="changePoint(${index}, 'x', this.value)"></div>
         <div class="field"><input aria-label="P${index + 1} Slave Position" type="number" step="0.01" value="${point.y.toFixed(2)}" oninput="changePoint(${index}, 'y', this.value)"></div>
         ${index === 0
-          ? '<div class="field"><input value="START (fixed)" disabled></div>'
+          ? `<div class="field"><input value="${getI18n('startFixed')}" disabled></div>`
           : `<div class="field"><select aria-label="P${index} to P${index + 1} function" onchange="changePoint(${index}, 'function', this.value)">${functionOptions(point.function)}</select></div>`}
         <button class="remove icon" type="button" title="P${index + 1} Remove point P" aria-label="P${index + 1} Remove point P" onclick="removePoint(${index})"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
       </section>`).join('');
@@ -148,8 +272,8 @@
         let start = i, end = i;
         while (end + 1 < points.length && isSplineRelated(points[end + 1].function)) end++;
         
-        if (!isBoundary(points[start].function)) { points[start].function = 'SPLINE_NATURAL'; madeChanges = true; }
-        if (end > start && !isBoundary(points[end].function)) { points[end].function = 'SPLINE_NATURAL'; madeChanges = true; }
+        if (!isBoundary(points[start].function)) { points[start].function = 'SPLINE_NATURAL'; madeChanges = true; showToast(getI18n('splineHealBounds')); }
+        if (end > start && !isBoundary(points[end].function)) { points[end].function = 'SPLINE_NATURAL'; madeChanges = true; showToast(getI18n('splineHealBounds')); }
         
         for (let j = start + 1; j < end; j++) {
           if (points[j].function !== 'SPLINE') { points[j].function = 'SPLINE'; madeChanges = true; }
@@ -170,14 +294,14 @@
   }
   function updateTableId(value) {
     const nextId = Number(value);
-    if (!Number.isInteger(nextId) || nextId < 0) { setError('Table ID must be an integer zero or greater.'); document.getElementById('tableId').value = tableId; return; }
+    if (!Number.isInteger(nextId) || nextId < 0) { setError(getI18n('errTableId')); document.getElementById('tableId').value = tableId; return; }
     tableId = nextId; setError();
   }
   function setPeriodic(value) { periodic = value; }
   function updateMasterRange() {
     const nextMin = Number(document.getElementById('masterMin').value), nextMax = Number(document.getElementById('masterMax').value);
-    if (!Number.isFinite(nextMin) || !Number.isFinite(nextMax) || nextMin >= nextMax) { setError('Master Minimum must be less than Maximum.'); return; }
-    if (points.some(point => point.x < nextMin || point.x > nextMax)) { setError('Existing points fall outside the new Master range. Move the points into this range first.'); return; }
+    if (!Number.isFinite(nextMin) || !Number.isFinite(nextMax) || nextMin >= nextMax) { setError(getI18n('errMasterRange')); return; }
+    if (points.some(point => point.x < nextMin || point.x > nextMax)) { setError(getI18n('errMasterBounds')); return; }
     masterMin = nextMin; masterMax = nextMax; zoomState = null; setError(); renderPoints(); calculate();
   }
   function addPoint() {
@@ -260,7 +384,7 @@
       rawDataLines.push(line);
     }
 
-    if (!rawDataLines.length) throw new Error('No data found in the CSV file.');
+    if (!rawDataLines.length) throw new Error(getI18n('errCsvNoData'));
 
     let startIndex = 0, colMaster = -1, colSlave = -1, colFunc = -1;
     const firstTokens = splitCsvLine(rawDataLines[0]);
@@ -300,7 +424,7 @@
       const x = Number(rawX), y = Number(rawY);
 
       if (!Number.isFinite(x) || !Number.isFinite(y)) {
-        throw new Error(`Satır ${i + 1} Invalid Master/Slave value at row: '${rawDataLines[i]}'`);
+        throw new Error(`${getI18n('errCsvInvalidRow')} ${i + 1}: '${rawDataLines[i]}'`);
       }
 
       const rawFunc = colFunc >= 0 ? tokens[colFunc] : 'POLYNOM1';
@@ -308,13 +432,13 @@
       parsedPoints.push({ x, y, function: func === 'NOTDEF' ? 'POLYNOM1' : func });
     }
 
-    if (!parsedPoints.length) throw new Error('No valid point data found.');
+    if (!parsedPoints.length) throw new Error(getI18n('errCsvNoValidData'));
     parsedPoints.sort((a, b) => a.x - b.x);
     delete parsedPoints[0].function;
 
     for (let i = 1; i < parsedPoints.length; i++) {
       if (Math.abs(parsedPoints[i].x - parsedPoints[i - 1].x) < 0.0001) {
-        throw new Error(`There are points with the same Master Position value (${parsedPoints[i].x.toFixed(2)}). Master values must be unique.`);
+        throw new Error(getI18n('errCsvDuplicate', parsedPoints[i].x.toFixed(2)));
       }
     }
 
@@ -366,7 +490,7 @@
     reader.onload = () => {
       try {
         const result = parseCsv(reader.result);
-        if (result.points.length > MAX_POINTS) throw new Error(`Maximum ${MAX_POINTS} points can be loaded. The file contains ${result.points.length} points.`);
+        if (result.points.length > MAX_POINTS) throw new Error(getI18n('errCsvMax', MAX_POINTS, result.points.length));
 
         tableId = result.tableId;
         periodic = result.periodic;
@@ -394,10 +518,10 @@
         renderPoints();
         calculate();
         const statusEl = document.getElementById('modeStatus');
-        if (statusEl) statusEl.textContent = `CSV successfully imported (${points.length} points).`;
-      } catch (error) { setError(`Failed to import CSV: ${error.message}`); }
+        if (statusEl) statusEl.textContent = getI18n('csvSuccess', points.length);
+      } catch (error) { setError(`${getI18n('csvFail')} ${error.message}`); }
     };
-    reader.onerror = () => setError('An error occurred while reading the file.');
+    reader.onerror = () => setError(getI18n('csvReadErr'));
     reader.readAsText(file, 'utf-8');
   }
   function setMode(nextMode) {
@@ -405,10 +529,10 @@
     document.getElementById('enableInsert').classList.toggle('active', mode === 'add');
     document.getElementById('enableDelete').classList.toggle('active', mode === 'delete');
     document.getElementById('modeStatus').textContent = mode === 'add'
-      ? 'Add mode active: Click anywhere on the graph area to insert a point.'
+      ? getI18n('modeAdd')
       : mode === 'delete'
-        ? 'Delete mode active: Click on a point to delete it.'
-        : 'Drag mode: Hover over a point on the graph and drag it.';
+        ? getI18n('modeDel')
+        : getI18n('modeDrag');
     document.getElementById('graph').style.cursor = mode === 'add' ? 'crosshair' : mode === 'delete' ? deleteCursor : 'grab';
   }
   function graphPointerPosition(event, scale = graphScale) {
@@ -428,7 +552,7 @@
     const index = points.findIndex(point => point.x > position.x);
     const insertAt = index === -1 ? points.length : index;
     const left = points[insertAt - 1], right = points[insertAt];
-    if ((left && position.x - left.x < .0001) || (right && right.x - position.x < .0001)) { setError('The new point cannot have the same Master Position value as an existing point.'); return; }
+    if ((left && position.x - left.x < .0001) || (right && right.x - position.x < .0001)) { setError(getI18n('errMasterSame')); return; }
     
     let newFunc = 'POLYNOM1';
     if (insertAt < points.length && points[insertAt]) newFunc = points[insertAt].function;
@@ -614,7 +738,7 @@
   }
 
   function calculate() {
-    if (!validPoints()) { setError('Each Master Position value must be greater than the previous point.'); return; }
+    if (!validPoints()) { setError(getI18n('errMasterGreater')); return; }
     setError();
     if (healSplines()) {
       renderPoints();
@@ -626,12 +750,12 @@
   function updatePosition() {
     if (!validPoints()) return;
     const master = Number(document.getElementById('masterInput').value); if (!Number.isFinite(master)) return;
-    if (!points.length) { document.getElementById('slaveOutput').textContent = '-'; document.getElementById('slopeOutput').textContent = '-'; document.getElementById('segmentInfo').textContent = 'No points available. Graph uses 0-100 scale for Master and Slave.'; return; }
+    if (!points.length) { document.getElementById('slaveOutput').textContent = '-'; document.getElementById('slopeOutput').textContent = '-'; document.getElementById('segmentInfo').textContent = getI18n('noPoints'); return; }
     document.getElementById('slaveOutput').textContent = getSlave(master).toFixed(2);
     document.getElementById('slopeOutput').textContent = getSlope(master).toFixed(2);
-    if (points.length === 1) { document.getElementById('segmentInfo').textContent = 'Only stationary P1 exists; add points to create a curve.'; return; }
+    if (points.length === 1) { document.getElementById('segmentInfo').textContent = getI18n('onlyP1'); return; }
     const i = findSegment(master), a = points[i], b = points[i + 1];
-    document.getElementById('segmentInfo').textContent = `Active segment: P${i + 1} → P${i + 2} (${b.function}) | Master range: ${a.x.toFixed(2)} – ${b.x.toFixed(2)}`;
+    document.getElementById('segmentInfo').textContent = getI18n('activeSeg', i+1, i+2, b.function, a.x.toFixed(2), b.x.toFixed(2));
   }
   function drawGraph() {
     const canvas = document.getElementById('graph'), ctx = canvas.getContext('2d'), pad = 100, width = canvas.width - pad * 2, height = canvas.height - pad * 2;
@@ -692,8 +816,8 @@
     
     ctx.restore();
     ctx.fillStyle='#111'; ctx.font='14px Arial'; ctx.textAlign='center';
-    ctx.fillText('Master Position', canvas.width/2, canvas.height-20);
-    ctx.save(); ctx.translate(18, canvas.height/2); ctx.rotate(-Math.PI/2); ctx.fillText('Slave Position', 0, 0); ctx.restore();
+    ctx.fillText(getI18n('graphMaster'), canvas.width/2, canvas.height-20);
+    ctx.save(); ctx.translate(18, canvas.height/2); ctx.rotate(-Math.PI/2); ctx.fillText(getI18n('graphSlave'), 0, 0); ctx.restore();
     if (document.getElementById('velocityWrapper').style.display !== 'none') drawVelocity();
     if (document.getElementById('accelerationWrapper').style.display !== 'none') drawAcceleration();
   }
@@ -764,7 +888,7 @@
     ctx.restore();
     ctx.fillStyle='#111'; ctx.font='14px Arial'; ctx.textAlign='center';
     ctx.fillText('Master Position', canvas.width/2, canvas.height-20);
-    ctx.save(); ctx.translate(18, canvas.height/2); ctx.rotate(-Math.PI/2); ctx.fillText('Velocity', 0, 0); ctx.restore();
+    ctx.save(); ctx.translate(18, canvas.height/2); ctx.rotate(-Math.PI/2); ctx.fillText(getI18n('graphVel'), 0, 0); ctx.restore();
   }
   function toggleAcceleration() {
     const w = document.getElementById('accelerationWrapper');
@@ -837,7 +961,7 @@
     ctx.restore();
     ctx.fillStyle='#111'; ctx.font='14px Arial'; ctx.textAlign='center';
     ctx.fillText('Master Position', canvas.width/2, canvas.height-20);
-    ctx.save(); ctx.translate(18, canvas.height/2); ctx.rotate(-Math.PI/2); ctx.fillText('Acceleration', 0, 0); ctx.restore();
+    ctx.save(); ctx.translate(18, canvas.height/2); ctx.rotate(-Math.PI/2); ctx.fillText(getI18n('graphAcc'), 0, 0); ctx.restore();
   }
   
   let isGraphFocused = false;
