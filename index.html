@@ -247,11 +247,11 @@
   function renderPoints() {
     document.getElementById('pointsRows').innerHTML = points.map((point, index) => `
       <section class="point"><h3>P${index + 1}</h3>
-        <div class="field"><input aria-label="P${index + 1} Master Position" type="number" step="0.01" min="${masterMin}" max="${masterMax}" value="${point.x.toFixed(2)}" oninput="changePoint(${index}, 'x', this.value)"></div>
-        <div class="field"><input aria-label="P${index + 1} Slave Position" type="number" step="0.01" value="${point.y.toFixed(2)}" oninput="changePoint(${index}, 'y', this.value)"></div>
+        <div class="field"><input aria-label="P${index + 1} Master Position" type="number" step="0.01" min="${masterMin}" max="${masterMax}" value="${point.x.toFixed(2)}" oninput="changePoint(${index}, 'x', this.value, false)" onchange="changePoint(${index}, 'x', this.value, true)"></div>
+        <div class="field"><input aria-label="P${index + 1} Slave Position" type="number" step="0.01" value="${point.y.toFixed(2)}" oninput="changePoint(${index}, 'y', this.value, false)" onchange="changePoint(${index}, 'y', this.value, true)"></div>
         ${index === 0
           ? `<div class="field"><input value="${getI18n('startFixed')}" disabled></div>`
-          : `<div class="field"><select aria-label="P${index} to P${index + 1} function" onchange="changePoint(${index}, 'function', this.value)">${functionOptions(point.function)}</select></div>`}
+          : `<div class="field"><select aria-label="P${index} to P${index + 1} function" onchange="changePoint(${index}, 'function', this.value, true)">${functionOptions(point.function)}</select></div>`}
         <button class="remove icon" type="button" title="P${index + 1} Remove point P" aria-label="P${index + 1} Remove point P" onclick="removePoint(${index})"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z"/></svg></button>
       </section>`).join('');
   }
@@ -291,11 +291,16 @@
     return madeChanges;
   }
 
-  function changePoint(index, key, value) {
+  function changePoint(index, key, value, finalize = false) {
     if (key === 'function') points[index][key] = value;
-    else if (key === 'x') points[index].x = Math.min(masterMax, Math.max(masterMin, Number(value)));
+    else if (key === 'x') {
+      const minX = index === 0 ? masterMin : points[index - 1].x + 0.01;
+      const maxX = index === points.length - 1 ? masterMax : points[index + 1].x - 0.01;
+      points[index].x = Math.max(minX, Math.min(maxX, Number(value)));
+    }
     else points[index][key] = Number(value);
     calculate();
+    if (finalize) renderPoints();
   }
   function updateTableId(value) {
     const nextId = Number(value);
@@ -558,7 +563,7 @@
     const index = points.findIndex(point => point.x > position.x);
     const insertAt = index === -1 ? points.length : index;
     const left = points[insertAt - 1], right = points[insertAt];
-    if ((left && position.x - left.x < .0001) || (right && right.x - position.x < .0001)) { setError(getI18n('errMasterSame')); return; }
+    if ((left && position.x - left.x < 0.01) || (right && right.x - position.x < 0.01)) { setError(getI18n('errMasterSame')); return; }
     
     let newFunc = 'POLYNOM1';
     if (insertAt < points.length && points[insertAt] && points[insertAt].function) newFunc = points[insertAt].function;
@@ -621,8 +626,8 @@
     }
 
     const position = graphPointerPosition(event, drag.scale), index = drag.index;
-    const minX = index === 0 ? masterMin : Math.max(masterMin, points[index - 1].x + .0001);
-    const maxX = index === points.length - 1 ? masterMax : Math.min(masterMax, points[index + 1].x - .0001);
+    const minX = index === 0 ? masterMin : Math.max(masterMin, points[index - 1].x + 0.01);
+    const maxX = index === points.length - 1 ? masterMax : Math.min(masterMax, points[index + 1].x - 0.01);
     const minY = masterMin, maxY = 999999;
     points[index].x = Math.max(minX, Math.min(maxX, position.x));
     points[index].y = Math.max(minY, Math.min(maxY, position.y));
